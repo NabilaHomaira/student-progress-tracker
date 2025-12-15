@@ -34,5 +34,15 @@ router.patch('/enrollment-requests/:requestId/approve', auth, checkInstructorOrE
 // Reject enrollment request
 router.patch('/enrollment-requests/:requestId/reject', auth, checkInstructorOrEnrollmentPermission, enrollmentController.rejectEnrollmentRequest);
 
+// Enrollment History - Requirement 2, Feature 4
+// Get enrollment history for student
+router.get('/students/enrollment-history', auth, checkStudent, enrollmentController.getEnrollmentHistory);
+
+// Unenroll from a course
+router.post('/courses/:courseId/unenroll', auth, checkStudent, enrollmentController.unenrollFromCourse);
+
+// Mark course as completed
+router.post('/courses/:courseId/mark-completed', auth, checkStudent, enrollmentController.markCourseAsCompleted);
+
 module.exports = router;
 

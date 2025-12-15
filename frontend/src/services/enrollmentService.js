@@ -149,3 +149,60 @@ export const rejectEnrollmentRequest = async (requestId, rejectionReason, token)
   return await response.json();
 };
 
+// Requirement 2, Feature 4: Enrollment History
+
+// Get enrollment history for student
+export const getEnrollmentHistory = async (token) => {
+  const response = await fetch(`${API_BASE_URL}/api/enrollment/students/enrollment-history`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || 'Failed to get enrollment history');
+  }
+
+  return await response.json();
+};
+
+// Unenroll from a course
+export const unenrollFromCourse = async (courseId, reason, token) => {
+  const response = await fetch(`${API_BASE_URL}/api/enrollment/courses/${courseId}/unenroll`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+    body: JSON.stringify({ reason }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || 'Failed to unenroll from course');
+  }
+
+  return await response.json();
+};
+
+// Mark course as completed
+export const markCourseAsCompleted = async (courseId, token) => {
+  const response = await fetch(`${API_BASE_URL}/api/enrollment/courses/${courseId}/mark-completed`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || 'Failed to mark course as completed');
+  }
+
+  return await response.json();
+};
+

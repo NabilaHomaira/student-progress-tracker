@@ -430,3 +430,171 @@ exports.rejectEnrollmentRequest = async (req, res) => {
   }
 };
 
+// Get enrollment history for a student
+exports.getEnrollmentHistory = async (req, res) => {
+  try {
+    const studentId = req.userId;
+
+    const student = await Student.findOne({ email: (await User.findById(studentId)).email })
+      .populate({
+        path: 'enrollmentHistory.course',
+        select: 'title code description instructor',
+        populate: {
+          path: 'instructor',
+          select: 'name email',
+        },
+      })
+      .sort({ 'enrollmentHistory.enrolledAt': -1 });
+
+    if (!student) {
+      return res.status(404).json({ message: 'Student record not found' });
+    }
+
+    res.status(200).json({
+      message: 'Enrollment history retrieved successfully',
+      enrollmentHistory: student.enrollmentHistory || [],
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error fetching enrollment history', error: error.message });
+  }
+};
+
+// Unenroll from a course
+exports.unenrollFromCourse = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const { reason } = req.body;
+    const studentId = req.userId;
+
+    // Validate course exists
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return res.status(404).json({ message: 'Course not found' });
+    }
+
+    // Validate user exists and is a student
+    const user = await User.findById(studentId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    if (user.role !== 'student') {
+      return res.status(403).json({ message: 'Only students can unenroll from courses' });
+    }
+
+    // Check if enrolled
+    const enrollmentIndex = course.enrolledStudents.findIndex(
+      (id) => id.toString() === studentId
+    );
+
+    if (enrollmentIndex === -1) {
+      return res.status(400).json({ message: 'You are not enrolled in this course' });
+    }
+
+    // Remove from course
+    course.enrolledStudents.splice(enrollmentIndex, 1);
+    await course.save();
+
+    // Update student record
+    let student = await Student.findOne({ email: user.email });
+    if (student) {
+      // Update current enrollment
+      const currentEnrollment = student.enrollments.find(
+        (e) => e.course.toString() === courseId
+      );
+
+      if (currentEnrollment) {
+        // Add to enrollment history with dropped status
+        student.enrollmentHistory.push({
+          course: courseId,
+          status: 'dropped',
+          enrolledAt: currentEnrollment._doc?.enrolledAt || new Date(),
+          unenrolledAt: new Date(),
+          reason: reason || 'Student requested unenrollment',
+        });
+
+        // Remove from current enrollments
+        student.enrollments = student.enrollments.filter(
+          (e) => e.course.toString() !== courseId
+        );
+
+        await student.save();
+      }
+    }
+
+    res.status(200).json({
+      message: 'Successfully unenrolled from course. Records have been preserved.',
+      course: {
+        _id: course._id,
+        title: course.title,
+        code: course.code,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error unenrolling from course', error: error.message });
+  }
+};
+
+// Mark course as completed
+exports.markCourseAsCompleted = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const studentId = req.userId;
+
+    // Validate course exists
+    const course = await Course.findById(courseId);
+    if (!course) {
+      return res.status(404).json({ message: 'Course not found' });
+    }
+
+    // Validate user exists and is a student
+    const user = await User.findById(studentId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Check if enrolled
+    const isEnrolled = course.enrolledStudents.some(
+      (id) => id.toString() === studentId
+    );
+
+    if (!isEnrolled) {
+      return res.status(400).json({ message: 'You are not enrolled in this course' });
+    }
+
+    // Update student record
+    let student = await Student.findOne({ email: user.email });
+    if (student) {
+      const currentEnrollment = student.enrollments.find(
+        (e) => e.course.toString() === courseId
+      );
+
+      if (currentEnrollment) {
+        // Update status to completed
+        currentEnrollment.status = 'completed';
+
+        // Add to enrollment history
+        student.enrollmentHistory.push({
+          course: courseId,
+          status: 'completed',
+          enrolledAt: new Date(),
+          unenrolledAt: new Date(),
+          reason: 'Course completed',
+        });
+
+        await student.save();
+      }
+    }
+
+    res.status(200).json({
+      message: 'Course marked as completed successfully',
+      course: {
+        _id: course._id,
+        title: course.title,
+        code: course.code,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Error marking course as completed', error: error.message });
+  }
+};
+
