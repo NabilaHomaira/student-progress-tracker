@@ -1,3 +1,4 @@
+// @ts-nocheck
 const Course = require('../models/Course');
 
 // Archive a course
