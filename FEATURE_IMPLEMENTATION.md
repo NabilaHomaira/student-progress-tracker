@@ -1,53 +1,227 @@
-# Requirement 1, Feature 2: Archive/Unarchive Courses
+# Feature Implementation Documentation
 
-## Overview
-This feature allows teachers to archive or reactivate existing courses while preserving all previous records and data. Archived courses remain in the system for historical purposes but are not visible in the active courses list by default.
+## Requirement 1, Feature 2: Archive/Unarchive Courses
 
-## Implementation Details
+### Overview
+Teachers can archive or reactivate courses while preserving all records. Archived courses remain in the system for historical purposes but are not visible by default.
 
-### Backend Structure
+---
 
-#### Models
-- **Course Model** (`backend/models/Course.js`)
-  - `isArchived`: Boolean field to track archive status (default: false)
-  - `archiveDate`: Timestamp of when the course was archived
-  - Includes fields for: title, code, description, instructor, enrolledStudents, timestamps
+## Requirement 2, Feature 4: Course Enrollment History
 
-- **User Model** (`backend/models/User.js`)
-  - Referenced by Course model for instructor and student relationships
-  - Fields: name, email, password, role (student/teacher/admin)
+### Overview
+Students can view their complete course enrollment history, including currently enrolled, completed, and dropped courses. All enrollment records are permanently preserved with timestamps and reasons for unenrollment.
 
-#### Controllers
-- **Course Controller** (`backend/controllers/courseController.js`)
-  - `archiveCourse(id)`: Archives a course and records the archive date
-  - `unarchiveCourse(id)`: Reactivates an archived course
-  - `getAllCourses()`: Fetches courses with optional filter for archived courses
-  - `getCourseById(id)`: Retrieves a specific course
-  - `createCourse()`: Creates a new active course
-  - `updateCourse()`: Updates course details
+### Backend Implementation
 
-#### Routes
-- **Course Routes** (`backend/routes/courseRoutes.js`)
-  - `POST /api/courses` - Create a new course
-  - `GET /api/courses?includeArchived=true|false` - Get all courses
-  - `GET /api/courses/:id` - Get course by ID
-  - `PUT /api/courses/:id` - Update course details
-  - `PATCH /api/courses/:id/archive` - Archive a course
-  - `PATCH /api/courses/:id/unarchive` - Unarchive a course
+#### 1. **Student Model** (`backend/models/student.js`) - UPDATED
+Added `enrollmentHistorySchema`:
+- `course`: Course reference
+- `status`: "enrolled" | "dropped" | "completed"
+- `enrolledAt`: Enrollment timestamp
+- `unenrolledAt`: Unenrollment/completion timestamp
+- `reason`: User-provided reason for status change
 
-### Frontend Structure
+#### 2. **Enrollment Controller** (`backend/controllers/enrollmentController.js`) - NEW METHODS
 
-#### Components
-- **CourseCard** (`frontend/src/components/CourseCard.js`)
-  - Displays individual course information
-  - Shows archive status badge for archived courses
-  - Archive/Unarchive buttons based on course status
-  - Displays enrolled student count and archive date
+**`getEnrollmentHistory()`**
+- Fetches all enrollment history records for logged-in student
+- Populates course and instructor details
+- Returns sorted enrollment history
 
-- **CourseList** (`frontend/src/components/CourseList.js`)
-  - Container component for displaying all courses
-  - Toggle checkbox to show/hide archived courses
-  - Handles archive/unarchive operations
+**`unenrollFromCourse()`**
+- Removes student from course enrollment
+- Records unenrollment in history with "dropped" status
+- Captures reason for unenrollment
+- Preserves all assignment/grade data
+- Validates student enrollment status
+
+**`markCourseAsCompleted()`**
+- Updates enrollment status to "completed"
+- Records completion in history
+- Triggers when course ends or student completes it
+
+#### 3. **Enrollment Routes** (`backend/routes/enrollmentRoutes.js`) - NEW ROUTES
+
+```javascript
+GET /api/enrollment/students/enrollment-history
+POST /api/enrollment/courses/:courseId/unenroll
+POST /api/enrollment/courses/:courseId/mark-completed
+```
+
+### Frontend Implementation
+
+#### 1. **EnrollmentHistory Component** (`frontend/src/components/EnrollmentHistory.js`) - NEW
+Features:
+- Display complete enrollment history with course details
+- Status filtering (All, Enrolled, Completed, Dropped)
+- Timeline view with enrollment/unenrollment dates
+- Unenroll button for currently enrolled courses
+- Summary statistics (total, enrolled, completed, dropped)
+- Error handling and loading states
+
+#### 2. **EnrollmentHistory Styles** (`frontend/src/styles/EnrollmentHistory.css`) - NEW
+- Responsive card layout
+- Status badge color coding:
+  - 🔵 Enrolled (Blue)
+  - ✅ Completed (Green)
+  - ❌ Dropped (Red)
+- Timeline visualization
+- Mobile responsive (768px, 480px breakpoints)
+- Professional typography and spacing
+
+#### 3. **Enrollment Service** (`frontend/src/services/enrollmentService.js`) - UPDATED
+New functions:
+- `getEnrollmentHistory(token)`: Fetch history
+- `unenrollFromCourse(courseId, reason, token)`: Unenroll with reason
+- `markCourseAsCompleted(courseId, token)`: Mark as completed
+
+### API Endpoints
+
+#### Get Enrollment History
+```http
+GET /api/enrollment/students/enrollment-history
+Authorization: Bearer {token}
+
+Response:
+{
+  "enrollmentHistory": [
+    {
+      "course": { "_id", "title", "code", "description", "instructor" },
+      "status": "completed|dropped|enrolled",
+      "enrolledAt": "2025-09-01T08:00:00Z",
+      "unenrolledAt": "2025-12-15T16:30:00Z",
+      "reason": "Course completed successfully"
+    }
+  ]
+}
+```
+
+#### Unenroll from Course
+```http
+POST /api/enrollment/courses/:courseId/unenroll
+Authorization: Bearer {token}
+Content-Type: application/json
+
+Body: { "reason": "Personal reasons" }
+
+Response:
+{
+  "message": "Successfully unenrolled from course. Records have been preserved.",
+  "course": { "_id", "title", "code" }
+}
+```
+
+#### Mark Course as Completed
+```http
+POST /api/enrollment/courses/:courseId/mark-completed
+Authorization: Bearer {token}
+
+Response:
+{
+  "message": "Course marked as completed successfully",
+  "course": { "_id", "title", "code" }
+}
+```
+
+### Data Preservation
+
+When student drops course:
+- ✅ Enrollment history record created with "dropped" status
+- ✅ All assignment submissions preserved
+- ✅ All grades preserved
+- ✅ Unenrollment reason recorded
+- ✅ Date/time of unenrollment recorded
+
+### Error Handling
+
+| Error | Status | Cause |
+|-------|--------|-------|
+| Course not found | 404 | Invalid course ID |
+| User not found | 404 | Student doesn't exist |
+| Not enrolled | 400 | Student not in course |
+| Only students can unenroll | 403 | Non-student role |
+
+### Usage Flow
+
+1. Student navigates to "My Enrollment History"
+2. Component displays all courses with statuses
+3. Use filter buttons to view specific status
+4. Click "Unenroll from Course" on active course
+5. Enter reason for unenrollment
+6. Course updates to "Dropped" status
+7. View summary statistics
+
+### Features Summary
+
+✅ Complete enrollment history tracking
+✅ Status filtering (enrolled, completed, dropped)
+✅ Timeline visualization with dates
+✅ Unenrollment reason tracking
+✅ Data preservation on unenrollment
+✅ Summary statistics dashboard
+✅ Responsive mobile design
+✅ Comprehensive error handling
+
+---
+
+## Requirement 1, Feature 2: Archive/Unarchive Courses
+
+### Overview
+Teachers can archive or reactivate courses while preserving all records. Archived courses remain in the system for historical purposes but are not visible in the active courses list by default.
+
+### Backend Implementation
+
+#### 1. **Course Model** (`backend/models/Course.js`)
+- `isArchived`: Boolean field (default: false)
+- `archiveDate`: Timestamp when archived
+- `instructor`: Reference to User
+- `enrolledStudents`: Array of student references
+- `assistants`: Array of co-instructors with permissions
+
+#### 2. **Course Controller** (`backend/controllers/courseController.js`)
+- `archiveCourse()`: Archive with date recording
+- `unarchiveCourse()`: Reactivate archived course
+- `getAllCourses()`: List with archive filter
+- `getCourseById()`: Get single course
+- `createCourse()`: Create new course
+- `updateCourse()`: Update course details
+
+#### 3. **Course Routes** (`backend/routes/courseRoutes.js`)
+```javascript
+POST /api/courses - Create
+GET /api/courses?includeArchived=true|false - List
+GET /api/courses/:id - Get by ID
+PUT /api/courses/:id - Update
+PATCH /api/courses/:id/archive - Archive
+PATCH /api/courses/:id/unarchive - Unarchive
+```
+
+### Frontend Implementation
+
+#### 1. **CourseCard Component** (`frontend/src/components/CourseCard.js`)
+- Display course information
+- Archive status badge
+- Archive/Unarchive buttons
+- Enrolled student count
+- Archive date display
+
+#### 2. **CourseList Component** (`frontend/src/components/CourseList.js`)
+- List all courses
+- Toggle to show/hide archived
+- Archive/unarchive operations
+- Error handling
+- Loading states
+
+#### 3. **Course Service** (`frontend/src/services/courseService.js`)
+API functions for all course operations
+
+### Key Features
+✅ Archive courses for record preservation
+✅ Unarchive courses when needed
+✅ Filter between active and archived
+✅ Visual indicators for archived courses
+✅ Complete data preservation
   - Error handling and loading states
 
 #### Services

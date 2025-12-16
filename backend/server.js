@@ -6,6 +6,7 @@ require("dotenv").config();
 // import routes
 const courseRoutes = require("./routes/courseRoutes");
 const statsRoutes = require("./routes/statsRoutes");
+const authRoutes = require("./routes/authRoutes");   // ADD THIS
 
 const app = express();
 
@@ -28,6 +29,7 @@ app.get("/", (req, res) => {
 // mount your feature routes
 app.use("/api/courses", courseRoutes);
 app.use("/api/stats", statsRoutes);
+app.use("/api/auth", authRoutes);           
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log('Server running on port ${PORT}'));

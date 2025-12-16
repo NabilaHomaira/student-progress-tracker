@@ -1,0 +1,380 @@
+.enrollment-history-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 24px 20px;
+  background-color: #f8f9fa;
+  min-height: 100vh;
+}
+
+.enrollment-history-header {
+  margin-bottom: 32px;
+}
+
+.enrollment-history-header h2 {
+  margin: 0 0 8px 0;
+  font-size: 32px;
+  font-weight: 700;
+  color: #212529;
+}
+
+.header-subtitle {
+  margin: 0;
+  font-size: 14px;
+  color: #6c757d;
+}
+
+.enrollment-history-error {
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  color: #721c24;
+  padding: 12px 16px;
+  border-radius: 6px;
+  margin-bottom: 24px;
+  font-size: 14px;
+}
+
+.enrollment-history-loading {
+  text-align: center;
+  padding: 60px 20px;
+  font-size: 16px;
+  color: #6c757d;
+}
+
+/* Filter Section */
+.filter-section {
+  background: white;
+  padding: 16px;
+  border-radius: 8px;
+  margin-bottom: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.filter-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 12px;
+}
+
+.filter-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.filter-btn {
+  padding: 8px 16px;
+  border: 2px solid #dee2e6;
+  background-color: white;
+  color: #495057;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filter-btn:hover {
+  border-color: #007bff;
+  color: #007bff;
+}
+
+.filter-btn.active {
+  background-color: #007bff;
+  border-color: #007bff;
+  color: white;
+}
+
+/* Enrollment History List */
+.enrollment-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.enrollment-record {
+  background: white;
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-left: 4px solid #007bff;
+  transition: all 0.3s ease;
+}
+
+.enrollment-record:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.record-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+  gap: 16px;
+}
+
+.record-info {
+  flex: 1;
+}
+
+.course-title {
+  margin: 0 0 4px 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #212529;
+}
+
+.course-code {
+  margin: 0;
+  font-size: 13px;
+  color: #6c757d;
+  font-weight: 500;
+}
+
+.instructor-info {
+  margin: 8px 0 0 0;
+  font-size: 13px;
+  color: #495057;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.status-enrolled {
+  background-color: #d1ecf1;
+  color: #0c5460;
+  border: 1px solid #bee5eb;
+}
+
+.status-completed {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.status-dropped {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+/* Record Description */
+.record-description {
+  margin-bottom: 16px;
+}
+
+.course-description {
+  margin: 0;
+  font-size: 14px;
+  color: #495057;
+  line-height: 1.6;
+}
+
+/* Timeline */
+.record-timeline {
+  background-color: #f8f9fa;
+  padding: 16px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+}
+
+.timeline-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid #dee2e6;
+  font-size: 14px;
+}
+
+.timeline-item:last-child {
+  border-bottom: none;
+}
+
+.timeline-label {
+  font-weight: 600;
+  color: #495057;
+  min-width: 100px;
+}
+
+.timeline-date {
+  color: #6c757d;
+  text-align: right;
+}
+
+.timeline-reason {
+  color: #495057;
+  font-style: italic;
+  text-align: right;
+}
+
+/* Record Actions */
+.record-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-unenroll {
+  background-color: #dc3545;
+  color: white;
+}
+
+.btn-unenroll:hover {
+  background-color: #c82333;
+  transform: translateY(-1px);
+}
+
+.btn-unenroll:active {
+  transform: translateY(0);
+}
+
+/* No History */
+.no-history {
+  background-color: white;
+  padding: 48px 24px;
+  border-radius: 8px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.no-history p {
+  margin: 0;
+  font-size: 16px;
+  color: #6c757d;
+}
+
+.try-different-filter {
+  margin-top: 8px !important;
+  font-size: 13px !important;
+}
+
+/* Summary Section */
+.history-summary {
+  background: white;
+  padding: 24px;
+  border-radius: 8px;
+  margin-top: 32px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.history-summary h3 {
+  margin: 0 0 16px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #212529;
+}
+
+.summary-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+.stat-item {
+  padding: 16px;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+  text-align: center;
+  border: 1px solid #dee2e6;
+}
+
+.stat-label {
+  display: block;
+  font-size: 13px;
+  color: #6c757d;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.stat-value {
+  display: block;
+  font-size: 28px;
+  font-weight: 700;
+  color: #007bff;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .enrollment-history-container {
+    padding: 16px;
+  }
+
+  .enrollment-history-header h2 {
+    font-size: 24px;
+  }
+
+  .record-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .status-badge {
+    margin-top: 8px;
+  }
+
+  .filter-buttons {
+    flex-direction: column;
+  }
+
+  .filter-btn {
+    width: 100%;
+  }
+
+  .enrollment-record {
+    padding: 16px;
+  }
+
+  .timeline-item {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .timeline-date,
+  .timeline-reason {
+    text-align: left !important;
+  }
+
+  .summary-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: 480px) {
+    .enrollment-history-header h2 {
+      font-size: 20px;
+    }
+
+    .summary-stats {
+      grid-template-columns: 1fr;
+    }
+
+    .record-info {
+      width: 100%;
+    }
+
+    .record-actions {
+      flex-direction: column;
+    }
+
+    .btn {
+      width: 100%;
+    }
+  }
+}

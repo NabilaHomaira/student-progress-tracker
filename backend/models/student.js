@@ -14,6 +14,30 @@ const enrollmentSchema = new Schema(
   { _id: false }
 );
 
+const enrollmentHistorySchema = new Schema(
+  {
+    course: { type: Schema.Types.ObjectId, ref: "Course", required: true },
+    status: {
+      type: String,
+      enum: ["enrolled", "dropped", "completed"],
+      required: true,
+    },
+    enrolledAt: {
+      type: Date,
+      default: Date.now,
+    },
+    unenrolledAt: {
+      type: Date,
+      default: null,
+    },
+    reason: {
+      type: String,
+      default: null,
+    },
+  },
+  { _id: true }
+);
+
 const assignmentStatsSchema = new Schema(
   {
     course: { type: Schema.Types.ObjectId, ref: "Course", required: true },
@@ -38,6 +62,7 @@ const studentSchema = new Schema(
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     enrollments: [enrollmentSchema],
+    enrollmentHistory: [enrollmentHistorySchema],
     assignmentStats: [assignmentStatsSchema],
     gradeHistory: [gradePointSchema],
   },
