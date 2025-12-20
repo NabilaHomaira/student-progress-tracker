@@ -1,134 +1,171 @@
-import React, { useState, useEffect } from 'react';
-import CourseCard from './CourseCard';
-import '../styles/CourseList.css';
+// import React, { useEffect, useState } from "react";
 
-const CourseList = () => {
+// export default function CourseList() {
+//   const [courses, setCourses] = useState([]);
+//   const [loading, setLoading] = useState(false);
+//   const [err, setErr] = useState("");
+
+//   const loadCourses = async () => {
+//     try {
+//       setLoading(true);
+//       setErr("");
+
+//       const res = await fetch("/api/courses");
+//       if (!res.ok) throw new Error("Failed to fetch courses");
+
+//       const data = await res.json();
+//       setCourses(data);
+//     } catch (e) {
+//       console.error(e);
+//       setErr("Could not load courses");
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   useEffect(() => {
+//     loadCourses();
+//   }, []);
+
+//   return (
+//     <div style={{ padding: "20px" }}>
+//       <h2>Courses</h2>
+
+//       <button onClick={loadCourses}>Refresh</button>
+
+//       {loading && <p>Loading…</p>}
+//       {err && <p style={{ color: "red" }}>{err}</p>}
+
+//       {!loading && courses.length === 0 && <p>No courses found.</p>}
+
+//       {courses.map((course) => {
+//         // ✅ THIS IS THE FIX
+//         const instructorText =
+//           typeof course.instructor === "string"
+//             ? course.instructor
+//             : course.instructor?.name || "Unknown";
+
+//         return (
+//           <div
+//             key={course._id}
+//             style={{
+//               border: "1px solid #ccc",
+//               padding: "10px",
+//               marginBottom: "10px",
+//               borderRadius: "6px",
+//             }}
+//           >
+//             <h3>{course.title}</h3>
+//             <p>
+//               <strong>Code:</strong> {course.code}
+//             </p>
+//             <p>
+//               <strong>Instructor:</strong> {instructorText}
+//             </p>
+//             <p>{course.description}</p>
+//           </div>
+//         );
+//       })}
+//     </div>
+//   );
+// }
+
+import React, { useEffect, useState } from "react";
+
+export default function CourseList() {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [showArchived, setShowArchived] = useState(false);
+  const [err, setErr] = useState("");
 
-  const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000';
-
-  useEffect(() => {
-    fetchCourses();
-  }, [showArchived]);
-
-  const fetchCourses = async () => {
-    setLoading(true);
-    setError(null);
+  const loadCourses = async () => {
     try {
-      const includeArchived = showArchived ? 'true' : 'false';
-      const response = await fetch(
-        `${API_BASE_URL}/api/courses?includeArchived=${includeArchived}`
-      );
+      setLoading(true);
+      setErr("");
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch courses');
-      }
+      const res = await fetch("/api/courses");
+      if (!res.ok) throw new Error("Failed to fetch courses");
 
-      const data = await response.json();
-      setCourses(data.courses || []);
-    } catch (err) {
-      setError(err.message);
-      console.error('Error fetching courses:', err);
+      const data = await res.json();
+      setCourses(Array.isArray(data) ? data : []);
+    } catch (e) {
+      console.error(e);
+      setErr("Could not load courses");
+      setCourses([]);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleArchiveCourse = async (courseId) => {
-    try {
-      const response = await fetch(
-        `${API_BASE_URL}/api/courses/${courseId}/archive`,
-        {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to archive course');
-      }
-
-      const data = await response.json();
-      console.log('Course archived:', data.message);
-      fetchCourses();
-    } catch (err) {
-      setError(err.message);
-      console.error('Error archiving course:', err);
-    }
-  };
-
-  const handleUnarchiveCourse = async (courseId) => {
-    try {
-      const response = await fetch(
-        `${API_BASE_URL}/api/courses/${courseId}/unarchive`,
-        {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error('Failed to unarchive course');
-      }
-
-      const data = await response.json();
-      console.log('Course unarchived:', data.message);
-      fetchCourses();
-    } catch (err) {
-      setError(err.message);
-      console.error('Error unarchiving course:', err);
-    }
-  };
-
-  if (loading) {
-    return <div className="loading">Loading courses...</div>;
-  }
+  useEffect(() => {
+    loadCourses();
+  }, []);
 
   return (
-    <div className="course-list-container">
-      <div className="course-list-header">
-        <h2>Courses</h2>
-        <div className="filter-controls">
-          <label className="filter-label">
-            <input
-              type="checkbox"
-              checked={showArchived}
-              onChange={(e) => setShowArchived(e.target.checked)}
-            />
-            Show Archived Courses
-          </label>
-        </div>
-      </div>
+    <div style={{ padding: "20px" }}>
+      <h2>Courses</h2>
 
-      {error && <div className="error-message">{error}</div>}
+      <button onClick={loadCourses}>Refresh</button>
 
-      <div className="course-list">
-        {courses.length > 0 ? (
-          courses.map((course) => (
-            <CourseCard
-              key={course._id}
-              course={course}
-              onArchive={handleArchiveCourse}
-              onUnarchive={handleUnarchiveCourse}
-            />
-          ))
-        ) : (
-          <div className="no-courses">
-            {showArchived
-              ? 'No archived courses found.'
-              : 'No active courses found.'}
+      {loading && <p>Loading…</p>}
+      {err && <p style={{ color: "red" }}>{err}</p>}
+
+      {!loading && courses.length === 0 && <p>No courses found.</p>}
+
+      {courses.map((course) => {
+        // instructor can be a string OR an object
+        const instructorText =
+          typeof course.instructor === "string"
+            ? course.instructor
+            : course.instructor?.name || "Unknown";
+
+        // enrolledStudents may be missing or not an array
+        const enrolledCount = Array.isArray(course.enrolledStudents)
+          ? course.enrolledStudents.length
+          : 0;
+
+        // capacity may be missing
+        const capacity =
+          typeof course.capacity === "number" ? course.capacity : null;
+
+        // availability
+        const seatsAvailable =
+          capacity === null ? "N/A" : Math.max(capacity - enrolledCount, 0);
+
+        return (
+          <div
+            key={course._id}
+            style={{
+              border: "1px solid #201062ff",
+              padding: "10px",
+              marginBottom: "10px",
+              borderRadius: "6px",
+            }}
+          >
+            <h3>{course.title}</h3>
+
+            <p>
+              <strong>Code:</strong> {course.code || "N/A"}
+            </p>
+
+            <p>
+              <strong>Instructor:</strong> {instructorText}
+            </p>
+
+            {/* ✅ Course availability */}
+            <p>
+              <strong>Seats available:</strong> {seatsAvailable}
+            </p>
+            <p>
+              <strong>Enrolled students:</strong> {enrolledCount}
+            </p>
+            <p>
+              <strong>Capacity:</strong> {capacity ?? "N/A"}
+            </p>
+
+            <p>{course.description}</p>
           </div>
-        )}
-      </div>
+        );
+      })}
     </div>
   );
-};
-
-export default CourseList;
+}

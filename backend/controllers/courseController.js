@@ -1,192 +1,194 @@
-// @ts-nocheck
-const Course = require('../models/Course');
 
-// Archive a course
-exports.archiveCourse = async (req, res) => {
+const Course = require("../models/Course");
+
+// Helper: build correct filter based on your DB field "archived"
+function buildArchiveFilter(showArchived) {
+  // showArchived=true => show everything
+  // showArchived=false => hide archived courses
+  return showArchived ? {} : { archived: { $ne: true } };
+}
+
+async function getCourses(req, res) {
   try {
-    const { id } = req.params;
+    console.log("✅ getCourses HIT");
 
-    // Validate if course exists
-    const course = await Course.findById(id);
-    if (!course) {
-      return res.status(404).json({ message: 'Course not found' });
-    }
+    const showArchived = String(req.query.showArchived).toLowerCase() === "true";
+    const filter = buildArchiveFilter(showArchived);
 
-    // Check if already archived
-    if (course.isArchived) {
-      return res
-        .status(400)
-        .json({ message: 'Course is already archived' });
-    }
+    const courses = await Course.find(filter)
+      .sort({ createdAt: -1 })
+      .lean();
 
-    // Archive the course
-    const archivedCourse = await Course.findByIdAndUpdate(
-      id,
-      {
-        isArchived: true,
-        archiveDate: new Date(),
-      },
-      { new: true }
-    );
+    // Add seat availability fields for UI
+    const coursesWithSeats = courses.map((c) => {
+      const enrolledCount = Array.isArray(c.enrolledStudents)
+        ? c.enrolledStudents.length
+        : 0;
 
-    res.status(200).json({
-      message: 'Course archived successfully',
-      course: archivedCourse,
+      const capacity = typeof c.capacity === "number" ? c.capacity : 0;
+
+      return {
+        ...c,
+        enrolledCount,
+        seatsAvailable: Math.max(capacity - enrolledCount, 0),
+      };
+    });
+
+    return res.status(200).json(coursesWithSeats);
+  } catch (error) {
+    console.error("GET COURSES ERROR:", error);
+    return res.status(500).json({
+      message: "Error retrieving courses",
+      error: error?.message || String(error),
+    });
+  }
+}
+
+async function getCourseById(req, res) {
+  try {
+    const course = await Course.findById(req.params.id).lean();
+
+    if (!course) return res.status(404).json({ message: "Course not found" });
+
+    const enrolledCount = Array.isArray(course.enrolledStudents)
+      ? course.enrolledStudents.length
+      : 0;
+
+    const capacity = typeof course.capacity === "number" ? course.capacity : 0;
+
+    return res.status(200).json({
+      ...course,
+      enrolledCount,
+      seatsAvailable: Math.max(capacity - enrolledCount, 0),
     });
   } catch (error) {
-    res.status(500).json({ message: 'Error archiving course', error });
-  }
-};
-
-// Unarchive a course
-exports.unarchiveCourse = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    // Validate if course exists
-    const course = await Course.findById(id);
-    if (!course) {
-      return res.status(404).json({ message: 'Course not found' });
-    }
-
-    // Check if already active
-    if (!course.isArchived) {
-      return res
-        .status(400)
-        .json({ message: 'Course is already active' });
-    }
-
-    // Unarchive the course
-    const unarchivedCourse = await Course.findByIdAndUpdate(
-      id,
-      {
-        isArchived: false,
-        archiveDate: null,
-      },
-      { new: true }
-    );
-
-    res.status(200).json({
-      message: 'Course reactivated successfully',
-      course: unarchivedCourse,
+    console.error("GET COURSE BY ID ERROR:", error);
+    return res.status(500).json({
+      message: "Error retrieving course",
+      error: error?.message || String(error),
     });
-  } catch (error) {
-    res.status(500).json({ message: 'Error reactivating course', error });
   }
-};
+}
 
-// Get all courses (with option to filter archived)
-exports.getAllCourses = async (req, res) => {
+async function createCourse(req, res) {
   try {
-    const { includeArchived } = req.query;
+    const { title, code, description, instructor, capacity } = req.body;
 
-    let query = {};
-    if (includeArchived === 'false') {
-      query.isArchived = false;
-    }
-
-    const courses = await Course.find(query)
-      .populate('instructor', 'name email')
-      .populate('enrolledStudents', 'name email');
-
-    res.status(200).json({
-      message: 'Courses retrieved successfully',
-      courses,
-    });
-  } catch (error) {
-    res.status(500).json({ message: 'Error retrieving courses', error });
-  }
-};
-
-// Get course by ID
-exports.getCourseById = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const course = await Course.findById(id)
-      .populate('instructor', 'name email')
-      .populate('enrolledStudents', 'name email');
-
-    if (!course) {
-      return res.status(404).json({ message: 'Course not found' });
-    }
-
-    res.status(200).json({
-      message: 'Course retrieved successfully',
-      course,
-    });
-  } catch (error) {
-    res.status(500).json({ message: 'Error retrieving course', error });
-  }
-};
-
-// Create a new course
-exports.createCourse = async (req, res) => {
-  try {
-    const { title, code, description, instructor } = req.body;
-
-    // Validate required fields
-    if (!title || !code || !description || !instructor) {
-      return res
-        .status(400)
-        .json({ message: 'All fields are required' });
+    if (!title || !code || !instructor) {
+      return res.status(400).json({
+        message: "Missing required fields: title, code, instructor",
+      });
     }
 
     const newCourse = new Course({
-      title,
-      code,
-      description,
-      instructor,
-      isArchived: false,
+      title: String(title).trim(),
+      code: String(code).trim(),
+      description: description ? String(description).trim() : "",
+      instructor, // must be ObjectId (see Course.js)
+      capacity: typeof capacity === "number" ? capacity : 30,
+      archived: false,
+      archiveDate: null,
+      enrolledStudents: [],
+      assistantIds: [],
     });
 
     const savedCourse = await newCourse.save();
-
-    res.status(201).json({
-      message: 'Course created successfully',
+    return res.status(201).json({
+      message: "Course created successfully",
       course: savedCourse,
     });
   } catch (error) {
-    if (error.code === 11000) {
-      return res
-        .status(400)
-        .json({ message: 'Course code already exists' });
+    console.error("CREATE COURSE ERROR:", error);
+
+    if (error && error.code === 11000) {
+      return res.status(400).json({
+        message: "Course code already exists",
+        error: error?.message || String(error),
+      });
     }
-    res.status(500).json({ message: 'Error creating course', error });
+
+    return res.status(500).json({
+      message: "Error creating course",
+      error: error?.message || String(error),
+    });
   }
-};
+}
 
-// Update course details
-exports.updateCourse = async (req, res) => {
+async function updateCourse(req, res) {
   try {
-    const { id } = req.params;
-    const { title, code, description } = req.body;
-
-    const course = await Course.findById(id);
-    if (!course) {
-      return res.status(404).json({ message: 'Course not found' });
-    }
-
-    const updatedCourse = await Course.findByIdAndUpdate(
-      id,
-      {
-        title: title || course.title,
-        code: code || course.code,
-        description: description || course.description,
-      },
-      { new: true }
+    const updated = await Course.findByIdAndUpdate(
+      req.params.id,
+      { $set: req.body },
+      { new: true, runValidators: true }
     );
 
-    res.status(200).json({
-      message: 'Course updated successfully',
-      course: updatedCourse,
+    if (!updated) return res.status(404).json({ message: "Course not found" });
+
+    return res.status(200).json({
+      message: "Course updated successfully",
+      course: updated,
     });
   } catch (error) {
-    if (error.code === 11000) {
-      return res
-        .status(400)
-        .json({ message: 'Course code already exists' });
+    console.error("UPDATE COURSE ERROR:", error);
+
+    if (error && error.code === 11000) {
+      return res.status(400).json({
+        message: "Course code already exists",
+        error: error?.message || String(error),
+      });
     }
-    res.status(500).json({ message: 'Error updating course', error });
+
+    return res.status(500).json({
+      message: "Error updating course",
+      error: error?.message || String(error),
+    });
   }
+}
+
+async function toggleArchiveCourse(req, res) {
+  try {
+    const course = await Course.findById(req.params.id);
+    if (!course) return res.status(404).json({ message: "Course not found" });
+
+    // IMPORTANT: toggle "archived" (not isArchived)
+    course.archived = !course.archived;
+    course.archiveDate = course.archived ? new Date() : null;
+
+    const saved = await course.save();
+
+    return res.status(200).json({
+      message: course.archived ? "Course archived" : "Course unarchived",
+      course: saved,
+    });
+  } catch (error) {
+    console.error("TOGGLE ARCHIVE COURSE ERROR:", error);
+    return res.status(500).json({
+      message: "Error archiving/unarchiving course",
+      error: error?.message || String(error),
+    });
+  }
+}
+
+async function deleteCourse(req, res) {
+  try {
+    const deleted = await Course.findByIdAndDelete(req.params.id);
+    if (!deleted) return res.status(404).json({ message: "Course not found" });
+
+    return res.status(200).json({ message: "Course deleted successfully" });
+  } catch (error) {
+    console.error("DELETE COURSE ERROR:", error);
+    return res.status(500).json({
+      message: "Error deleting course",
+      error: error?.message || String(error),
+    });
+  }
+}
+
+module.exports = {
+  getCourses,
+  getCourseById,
+  createCourse,
+  updateCourse,
+  toggleArchiveCourse,
+  deleteCourse,
 };

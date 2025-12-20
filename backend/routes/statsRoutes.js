@@ -1,7 +1,7 @@
 
 const express = require("express");
 const Student = require("../models/student");
-const Course = require("../models/course");
+const Course = require("../models/Course");
 const router = express.Router();
 
 const computeAverage = (arr) => {

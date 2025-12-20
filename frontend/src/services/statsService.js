@@ -1,30 +1,54 @@
 
-const BASE_URL = 'http://localhost:5000/api/stats';
+// import { api } from "./api";
 
-// Enrollment stats
-export async function getEnrollmentStats() {
-  const res = await fetch(`${BASE_URL}/enrollment`);
-  if (!res.ok) throw new Error('Failed to fetch enrollment stats');
-  return res.json();
-}
+// // Req 1 – Feature 3
+// export const getEnrollmentStats = async () => {
+//   const res = await api.get("/api/stats/enrollment");
+//   return res.data; // { totalStudents, totalEnrollments, averagePerformance }
+// };
 
-// Submission stats
-export async function getSubmissionStats(courseId) {
-  const res = await fetch(`${BASE_URL}/submissions/${courseId}`);
-  if (!res.ok) throw new Error('Failed to fetch submission stats');
-  return res.json();
-}
+// // Req 3 – Feature 4
+// export const getSubmissionStats = async (courseId) => {
+//   const res = await api.get('/api/stats/submissions/${courseId}');
+//   return res.data; // { course, submitted, pending, overdue }
+// };
 
-// Trend analysis
-export async function getTrendAnalysis(studentId) {
-  const res = await fetch(`${BASE_URL}/trends/${studentId}`);
-  if (!res.ok) throw new Error('Failed to fetch trend analysis');
-  return res.json();
-}
+// // Req 4 – Feature 3
+// export const getTrendAnalysis = async (studentId) => {
+//   const res = await api.get('/api/stats/trends/${studentId}');
+//   return res.data; // { studentSeries, classSeries }
+// };
 
-// Student progress
-export async function getStudentProgress(studentId) {
-  const res = await fetch(`${BASE_URL}/progress/${studentId}`);
-  if (!res.ok) throw new Error('Failed to fetch student progress');
-  return res.json();
-}
+// // Req 5 – Feature 1
+// export const getStudentProgress = async (studentId) => {
+//   const res = await api.get('/api/stats/progress/${studentId}');
+//   return res.data; // { studentName, points }
+// };
+
+
+
+import { api } from "./api";
+
+// Feature 3
+export const getEnrollmentStats = async () => {
+  const res = await api.get("/stats/enrollment");
+  return res.data; // { totalStudents, totalEnrollments, averagePerformance }
+};
+
+// Feature 4
+export const getSubmissionStats = async (courseId) => {
+  const res = await api.get('/stats/submissions/${courseId}');
+  return res.data; // { course, submitted, pending, overdue }
+};
+
+// Feature 3 (trend)
+export const getTrendAnalysis = async (studentId) => {
+  const res = await api.get('/stats/trends/${studentId}');
+  return res.data; // { studentSeries, classSeries }
+};
+
+// Feature 1 (student progress)
+export const getStudentProgress = async (studentId) => {
+  const res = await api.get('/stats/progress/${studentId}');
+  return res.data; // { studentName, points }
+};
