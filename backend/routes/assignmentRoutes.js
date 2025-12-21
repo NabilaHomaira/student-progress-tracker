@@ -17,5 +17,11 @@ router.put("/:id", assignmentController.updateAssignment);
 // Delete assignment
 router.delete("/:id", assignmentController.deleteAssignment);
 
+// Requirement 3, Feature 2: Duplicate assignment to multiple courses
+router.post("/:id/duplicate", assignmentController.duplicateAssignment);
+
+// Get duplication stats for an assignment
+router.get("/:id/duplication-stats", assignmentController.getAssignmentDuplicationStats);
+
 module.exports = router;
 

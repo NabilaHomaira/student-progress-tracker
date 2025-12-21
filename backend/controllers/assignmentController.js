@@ -211,11 +211,144 @@ async function deleteAssignment(req, res) {
   }
 }
 
+// Duplicate assignment to multiple courses
+async function duplicateAssignment(req, res) {
+  try {
+    const { id } = req.params;
+    const { targetCourseIds, adjustDueDate } = req.body;
+
+    // Validate required fields
+    if (!targetCourseIds || !Array.isArray(targetCourseIds) || targetCourseIds.length === 0) {
+      return res.status(400).json({
+        message: "targetCourseIds must be a non-empty array",
+      });
+    }
+
+    // Check if source assignment exists
+    const sourceAssignment = await Assignment.findById(id)
+      .populate("course", "title code")
+      .populate("createdBy", "name email");
+
+    if (!sourceAssignment) {
+      return res.status(404).json({
+        message: "Source assignment not found",
+      });
+    }
+
+    // Validate that all target courses exist
+    const courses = await Course.find({ _id: { $in: targetCourseIds } });
+    if (courses.length !== targetCourseIds.length) {
+      return res.status(400).json({
+        message: "One or more target courses do not exist",
+      });
+    }
+
+    // Check for duplicates in target courses
+    const existingAssignments = await Assignment.find({
+      course: { $in: targetCourseIds },
+      title: sourceAssignment.title,
+    });
+
+    if (existingAssignments.length > 0) {
+      return res.status(400).json({
+        message: `Assignment "${sourceAssignment.title}" already exists in ${existingAssignments.length} target course(s)`,
+        conflictingCourses: existingAssignments.map((a) => a.course),
+      });
+    }
+
+    // Get userId from auth middleware
+    const userId = req.userId || sourceAssignment.createdBy._id;
+
+    // Create duplicated assignments
+    const duplicatedAssignments = [];
+    const dueDateOffset = adjustDueDate ? 7 : 0; // Add 7 days if adjustDueDate is true
+
+    for (const courseId of targetCourseIds) {
+      const newDueDate = new Date(sourceAssignment.dueDate);
+      if (adjustDueDate) {
+        newDueDate.setDate(newDueDate.getDate() + dueDateOffset);
+      }
+
+      const newAssignment = new Assignment({
+        title: `${sourceAssignment.title} (Duplicated)`,
+        instructions: sourceAssignment.instructions,
+        dueDate: newDueDate,
+        maxScore: sourceAssignment.maxScore,
+        course: courseId,
+        createdBy: userId,
+      });
+
+      const savedAssignment = await newAssignment.save();
+      await savedAssignment.populate("course", "title code");
+      await savedAssignment.populate("createdBy", "name email");
+
+      duplicatedAssignments.push(savedAssignment);
+    }
+
+    return res.status(201).json({
+      message: `Assignment duplicated successfully to ${duplicatedAssignments.length} course(s)`,
+      sourceAssignment: {
+        _id: sourceAssignment._id,
+        title: sourceAssignment.title,
+        course: sourceAssignment.course,
+      },
+      duplicatedAssignments,
+      count: duplicatedAssignments.length,
+    });
+  } catch (error) {
+    console.error("DUPLICATE ASSIGNMENT ERROR:", error);
+    return res.status(500).json({
+      message: "Error duplicating assignment",
+      error: error?.message || String(error),
+    });
+  }
+}
+
+// Get assignment duplication summary (stats on how many times duplicated)
+async function getAssignmentDuplicationStats(req, res) {
+  try {
+    const { id } = req.params;
+
+    const assignment = await Assignment.findById(id);
+    if (!assignment) {
+      return res.status(404).json({
+        message: "Assignment not found",
+      });
+    }
+
+    // Count duplicates with similar title
+    const duplicates = await Assignment.find({
+      title: { $regex: assignment.title.replace(/\s*\(Duplicated\)\s*$/, ""), $options: "i" },
+    })
+      .populate("course", "title code")
+      .sort({ createdAt: -1 });
+
+    return res.status(200).json({
+      message: "Assignment duplication stats retrieved",
+      sourceAssignment: {
+        _id: assignment._id,
+        title: assignment.title,
+        course: assignment.course,
+      },
+      totalDuplications: duplicates.length - 1, // Exclude the source assignment
+      duplicates,
+    });
+  } catch (error) {
+    console.error("GET DUPLICATION STATS ERROR:", error);
+    return res.status(500).json({
+      message: "Error retrieving duplication stats",
+      error: error?.message || String(error),
+    });
+  }
+}
+
 module.exports = {
   createAssignment,
   getAssignmentsByCourse,
   getAssignmentById,
   updateAssignment,
   deleteAssignment,
+  duplicateAssignment,
+  getAssignmentDuplicationStats,
 };
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { createAssignment } from "../services/assignmentService";
+import { createAssignment, duplicateAssignment } from "../services/assignmentService";
 import { getAllCourses } from "../services/courseService";
+import DuplicateAssignment from "./DuplicateAssignment";
 import "./CreateAssignment.css";
 
 export default function CreateAssignment() {
@@ -17,6 +18,8 @@ export default function CreateAssignment() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [showDuplicateModal, setShowDuplicateModal] = useState(false);
+  const [lastCreatedAssignmentId, setLastCreatedAssignmentId] = useState(null);
 
   // Load courses on component mount
   useEffect(() => {
@@ -104,7 +107,9 @@ export default function CreateAssignment() {
       const response = await createAssignment(assignmentData);
 
       if (response.data) {
-        setSuccess("Assignment created successfully!");
+        setLastCreatedAssignmentId(response.data._id);
+        setSuccess("✅ Assignment created successfully! Want to duplicate it to other courses?");
+        
         // Reset form
         setFormData({
           title: "",
@@ -113,6 +118,11 @@ export default function CreateAssignment() {
           maxScore: "",
           courseId: "",
         });
+
+        // Show duplicate option after short delay
+        setTimeout(() => {
+          setShowDuplicateModal(true);
+        }, 2000);
       }
     } catch (err) {
       console.error("Error creating assignment:", err);
@@ -125,6 +135,24 @@ export default function CreateAssignment() {
       setSubmitting(false);
     }
   };
+
+  if (showDuplicateModal && lastCreatedAssignmentId) {
+    return (
+      <DuplicateAssignment
+        assignmentId={lastCreatedAssignmentId}
+        assignmentTitle={formData.title || courses.find(c => c._id === formData.courseId)?.title || "Assignment"}
+        onClose={() => {
+          setShowDuplicateModal(false);
+          setLastCreatedAssignmentId(null);
+        }}
+        onSuccess={() => {
+          setSuccess("✅ Assignment duplicated successfully!");
+          setShowDuplicateModal(false);
+          setLastCreatedAssignmentId(null);
+        }}
+      />
+    );
+  }
 
   return (
     <div className="create-assignment-container">
@@ -234,6 +262,13 @@ export default function CreateAssignment() {
           {submitting ? "Creating..." : "Create Assignment"}
         </button>
       </form>
+
+      <div className="info-box">
+        <p>
+          💡 <strong>Tip:</strong> After creating an assignment, you can duplicate it to other courses
+          to save time! Requirement 3, Feature 2 enabled.
+        </p>
+      </div>
     </div>
   );
 }
