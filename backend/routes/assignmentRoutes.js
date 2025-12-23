@@ -1,27 +1,58 @@
 const express = require("express");
 const router = express.Router();
+
 const assignmentController = require("../controllers/assignmentController");
+const auth = require("../middleware/auth");
+const permit = require("../middleware/role");
 
-// Create a new assignment
-router.post("/", assignmentController.createAssignment);
+/**
+ * Requirement 3 – Feature 3 Routes
+ */
 
-// Get all assignments for a course
-router.get("/course/:courseId", assignmentController.getAssignmentsByCourse);
+// Create assignment (Teacher/Admin)
+router.post(
+  "/",
+  auth,
+  permit("teacher", "admin"),
+  assignmentController.createAssignment
+);
 
-// Get assignment by ID
-router.get("/:id", assignmentController.getAssignmentById);
+// Get assignments by course (All logged-in users)
+router.get(
+  "/course/:courseId",
+  auth,
+  assignmentController.getAssignmentsByCourse
+);
 
-// Update assignment
-router.put("/:id", assignmentController.updateAssignment);
+// Get assignment by ID (All logged-in users)
+router.get(
+  "/:id",
+  auth,
+  assignmentController.getAssignmentById
+);
 
-// Delete assignment
-router.delete("/:id", assignmentController.deleteAssignment);
+// Update assignment (Teacher/Admin)
+router.put(
+  "/:id",
+  auth,
+  permit("teacher", "admin"),
+  assignmentController.updateAssignment
+);
 
-// Requirement 3, Feature 2: Duplicate assignment to multiple courses
-router.post("/:id/duplicate", assignmentController.duplicateAssignment);
+// Delete assignment (Teacher/Admin)
+router.delete(
+  "/:id",
+  auth,
+  permit("teacher", "admin"),
+  assignmentController.deleteAssignment
+);
 
-// Get duplication stats for an assignment
-router.get("/:id/duplication-stats", assignmentController.getAssignmentDuplicationStats);
+// Duplicate assignment (Teacher/Admin)
+router.post(
+  "/:id/duplicate",
+  auth,
+  permit("teacher", "admin"),
+  assignmentController.duplicateAssignment
+);
 
 module.exports = router;
-
