@@ -1,206 +1,57 @@
-// const mongoose = require('mongoose');
+// models/Course.js
+const mongoose = require('mongoose');
 
-// const courseSchema = new mongoose.Schema(
-//   {
-//     title: {
-//       type: String,
-//       required: true,
-//       trim: true,
-//     },
-//     code: {
-//       type: String,
-//       required: true,
-//       unique: true,
-//       trim: true,
-//     },
-//     description: {
-//       type: String,
-//       required: true,
-//     },
-//     instructor: {
-//       type: mongoose.Schema.Types.ObjectId,
-//       ref: 'User',
-//       required: true,
-//     },
-//     enrolledStudents: [
-//       {
-//         type: mongoose.Schema.Types.ObjectId,
-//         ref: 'User',
-//       },
-//     ],
-//     isArchived: {
-//       type: Boolean,
-//       default: false,
-//     },
-//     archiveDate: {
-//       type: Date,
-//       default: null,
-//     },
-//     createdAt: {
-//       type: Date,
-//       default: Date.now,
-//     },
-//     updatedAt: {
-//       type: Date,
-//       default: Date.now,
-//     },
-//   },
-//   {
-//     timestamps: true,
-//   }
-// );
-
-// // module.exports = mongoose.model('Course', courseSchema);
-// module.exports = mongoose.models.Course || mongoose.model('Course', courseSchema);
-
-
-// const mongoose = require("mongoose");
-
-// const courseSchema = new mongoose.Schema(
-//   {
-//     title: {
-//       type: String,
-//       required: true,
-//       trim: true,
-//     },
-//     code: {
-//       type: String,
-//       required: true,
-//       unique: true,
-//       trim: true,
-//     },
-//     description: {
-//       type: String,
-//       required: true,
-//       trim: true,
-//     },
-//     instructor: {
-//       type: mongoose.Schema.Types.ObjectId,
-//       ref: "User",
-//       required: true,
-//     },
-//     enrolledStudents: [
-//       {
-//         type: mongoose.Schema.Types.ObjectId,
-//         ref: "User",
-//       },
-//     ],
-//     isArchived: {
-//       type: Boolean,
-//       default: false,
-//     },
-//     archiveDate: {
-//       type: Date,
-//       default: null,
-//     },
-//   },
-//   { timestamps: true }
-// );
-
-// // Prevent OverwriteModelError in dev/hot-reload
-// module.exports = mongoose.models.Course || mongoose.model("Course", courseSchema);
-
-
-
-// const mongoose = require("mongoose");
-
-// const courseSchema = new mongoose.Schema(
-//   {
-//     title: {
-//       type: String,
-//       required: true,
-//       trim: true,
-//     },
-
-//     code: {
-//       type: String,
-//       required: true,
-//       unique: true,
-//       trim: true,
-//     },
-
-//     description: {
-//       type: String,
-//       required: true,
-//       trim: true,
-//     },
-
-//     // ✅ NEW: total seats available in the course
-//     capacity: {
-//       type: Number,
-//       default: 30,
-//       min: 1,
-//     },
-
-//     instructor: {
-//       type: mongoose.Schema.Types.ObjectId,
-//       ref: "User",
-//       required: true,
-//     },
-
-//     // If you use assistants/co-instructors
-//     assistantIds: [
-//       {
-//         type: mongoose.Schema.Types.ObjectId,
-//         ref: "User",
-//       },
-//     ],
-
-//     // If you track who enrolled (optional, but you already have it)
-//     enrolledStudents: [
-//       {
-//         type: mongoose.Schema.Types.ObjectId,
-//         ref: "User",
-//       },
-//     ],
-
-//     archived: {
-//       type: Boolean,
-//       default: false,
-//     },
-
-//     archiveDate: {
-//       type: Date,
-//       default: null,
-//     },
-//   },
-//   { timestamps: true }
-// );
-
-// module.exports = mongoose.model("Course", courseSchema);
-
-
-
-
-const mongoose = require("mongoose");
+const assistantSchema = new mongoose.Schema(
+  {
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+    },
+    permissions: {
+      canViewStudents: { type: Boolean, default: false },
+      canViewGrades: { type: Boolean, default: false },
+      canEditGrades: { type: Boolean, default: false },
+      canManageAssignments: { type: Boolean, default: false },
+      canViewAssignments: { type: Boolean, default: true },
+      canManageEnrollments: { type: Boolean, default: false },
+    },
+    assignedAt: {
+      type: Date,
+      default: Date.now,
+    },
+  },
+  { _id: false }
+);
 
 const courseSchema = new mongoose.Schema(
   {
     title: { type: String, required: true, trim: true },
-    code: { type: String, required: true, trim: true, unique: true },
-    description: { type: String, default: "", trim: true },
+    code: { type: String, required: true, unique: true, trim: true },
+    description: { type: String, required: true },
 
-    // ✅ Option A: embed instructor (NO ObjectId)
     instructor: {
-      name: { type: String, required: true, trim: true },
-      email: { type: String, required: true, trim: true },
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
     },
 
-    capacity: { type: Number, default: 30 },
+    assistants: [assistantSchema],
 
-    // keep your students as IDs (this is fine)
     enrolledStudents: [
-      { type: mongoose.Schema.Types.ObjectId, ref: "Student" },
+      { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     ],
 
-    assistantIds: [
-      { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-    ],
-
-    archived: { type: Boolean, default: false },
-    archiveDate: { type: Date, default: null },
+    archived: {
+      type: Boolean,
+      default: false,
+    },
+    archiveDate: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Course", courseSchema)
+module.exports = mongoose.model('Course', courseSchema);
