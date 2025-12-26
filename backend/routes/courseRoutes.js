@@ -42,6 +42,13 @@ router.patch(
   courseController.unenrollStudent
 );
 
+router.get(
+  "/:courseId/stats",
+  auth,
+  permit("teacher", "admin"),
+  courseController.getEnrollmentStats
+);
+
 
 // Any authenticated user
 router.get('/', auth, courseController.getAllCourses);
