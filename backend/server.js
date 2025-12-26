@@ -8,6 +8,7 @@ const courseRoutes = require("./routes/courseRoutes");
 const userRoutes = require("./routes/userRoutes");
 const assignmentRoutes = require("./routes/assignmentRoutes");
 const feedbackRoutes = require('./routes/feedbackRoutes');
+const focusRoutes = require("./routes/focusRoutes");
 
 const app = express();
 
@@ -20,6 +21,7 @@ app.use("/api/courses", courseRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/assignments", assignmentRoutes);
 app.use('/api/feedback', feedbackRoutes);
+app.use("/api/student", focusRoutes);
 
 const PORT = process.env.PORT || 5000;
 
