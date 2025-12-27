@@ -4,6 +4,7 @@ const router = express.Router();
 const assignmentController = require("../controllers/assignmentController");
 const auth = require("../middleware/auth");
 const permit = require("../middleware/role");
+const assistantPermission = require("../middleware/assistantPermission");
 
 /**
  * Requirement 3 – Feature 3 Routes
@@ -55,4 +56,13 @@ router.post(
   assignmentController.duplicateAssignment
 );
 
+// Assistant permission
+router.post(
+  "/",
+  auth,
+  permit("teacher", "admin", "assistant"),
+  assistantPermission("canManageAssignments"),
+  assignmentController.createAssignment
+);
 module.exports = router;
+
