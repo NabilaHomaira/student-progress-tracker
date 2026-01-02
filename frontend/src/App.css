@@ -1,0 +1,13 @@
+.App { padding: 2rem; min-height: calc(100vh - 64px); background: linear-gradient(180deg,#f8fafc 0%, #eef2ff 100%); }
+.App-header { background: #111827; color: white; padding: 2rem; border-radius: 12px; display: inline-block; }
+
+/* Buttons */
+.btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:8px 12px; border-radius:8px; border: none; cursor: pointer; transition: transform .12s ease, box-shadow .12s ease; }
+.btn:hover{ transform: translateY(-2px); box-shadow: 0 8px 20px rgba(16,24,40,0.08); }
+
+/* Card */
+.card { background:#fff; padding:14px; border-radius:12px; box-shadow: 0 10px 30px rgba(2,6,23,0.06); }
+
+/* Inputs */
+input, textarea { border:1px solid #e6e9ef; border-radius:8px; padding:8px; }
+select { border:1px solid #e6e9ef; border-radius:8px; padding:8px; }
