@@ -20,6 +20,17 @@ const submissionSchema = new mongoose.Schema(
     feedback: {
       type: String,
     },
+    content: {
+      type: String,
+      default: ''
+    },
+    attachment: {
+      filename: String,
+      originalName: String,
+      mimetype: String,
+      path: String,
+      size: Number
+    },
     learningTips: {
       type: String,
     },
