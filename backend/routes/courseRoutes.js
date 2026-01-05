@@ -115,7 +115,8 @@ router.get(
 ========================================= */
 
 // Get all courses (Req 2 Feature 1)
-router.get("/", auth, courseController.getCourses);
+// Allow without auth for viewing, but auth is optional for additional features
+router.get("/", courseController.getCourses);
 
 // Get single course
 router.get("/:id", auth, courseController.getCourseById);
