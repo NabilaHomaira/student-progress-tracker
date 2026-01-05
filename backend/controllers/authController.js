@@ -10,10 +10,36 @@ const tokenBlacklist = new Set();
 
 exports.register = async (req, res) => {
   try {
+    console.log('Registration request received:', { name: req.body.name, email: req.body.email, role: req.body.role });
     const { name, email, password, role } = req.body;
 
     if (!name || !email || !password) {
+      console.log('Validation failed: Missing required fields');
       return res.status(400).json({ message: 'Name, email and password are required' });
+    }
+
+    // Password validation rules
+    const passwordErrors = [];
+    if (password.length < 8) {
+      passwordErrors.push('At least 8 characters');
+    }
+    if (!/[A-Z]/.test(password)) {
+      passwordErrors.push('One uppercase letter');
+    }
+    if (!/[a-z]/.test(password)) {
+      passwordErrors.push('One lowercase letter');
+    }
+    if (!/[0-9]/.test(password)) {
+      passwordErrors.push('One number');
+    }
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+      passwordErrors.push('One special character');
+    }
+    
+    if (passwordErrors.length > 0) {
+      return res.status(400).json({ 
+        message: `Password must contain: ${passwordErrors.join(', ')}` 
+      });
     }
 
     const existing = await User.findOne({ email });
@@ -22,7 +48,9 @@ exports.register = async (req, res) => {
     }
 
     const user = new User({ name, email, password, role: role || 'student' });
+    console.log('Saving user to database...');
     await user.save();
+    console.log('User saved successfully:', user._id);
 
     // Ensure JWT secret is configured
     if (!JWT_SECRET) {
@@ -32,15 +60,39 @@ exports.register = async (req, res) => {
 
     // Create token
     const token = jwt.sign({ id: user._id, role: user.role }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+    console.log('Token created successfully');
 
-    return res.status(201).json({
+    const response = {
       message: 'User registered successfully',
-      user: { id: user._id, name: user.name, email: user.email, role: user.role },
-      token,
-    });
+      user: { 
+        id: user._id.toString(), 
+        _id: user._id.toString(),
+        name: user.name, 
+        email: user.email, 
+        role: user.role 
+      },
+      token
+    };
+    
+    console.log('Sending success response');
+    return res.status(201).json(response);
   } catch (error) {
-    console.error('Register error:', error);
-    return res.status(500).json({ message: 'Server error registering user' });
+    console.error('Register error details:', error);
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
+    
+    // More specific error messages
+    if (error.code === 11000) {
+      return res.status(400).json({ message: 'Email already registered' });
+    }
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ message: error.message });
+    }
+    
+    return res.status(500).json({ 
+      message: 'Server error registering user',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 };
 
