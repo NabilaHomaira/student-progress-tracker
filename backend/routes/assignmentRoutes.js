@@ -5,6 +5,8 @@ const assignmentController = require("../controllers/assignmentController");
 const auth = require("../middleware/auth");
 const permit = require("../middleware/role");
 const assistantPermission = require("../middleware/assistantPermission");
+const multer = require('multer');
+const upload = multer({ dest: 'uploads/' });
 
 /**
  * Requirement 3 – Feature 3 Routes
@@ -58,7 +60,7 @@ router.put(
 );
 
 // Student submit assignment
-router.post('/:id/submit', auth, permit('student'), assignmentController.submitAssignment);
+router.post('/:id/submit', auth, permit('student'), upload.single('attachment'), assignmentController.submitAssignment);
 
 // Delete assignment (Teacher/Admin)
 router.delete(
