@@ -15,30 +15,66 @@ function buildArchiveFilter(showArchived) {
 ===================================================== */
 async function getCourses(req, res) {
   try {
+    console.log('GET /courses - Request received');
     const showArchived =
       String(req.query.showArchived).toLowerCase() === "true";
     const filter = buildArchiveFilter(showArchived);
+    
+    console.log('Filter:', JSON.stringify(filter));
+    console.log('Show archived:', showArchived);
 
-    const courses = await Course.find(filter)
-      .populate("instructor", "name email")
-      .sort({ createdAt: -1 })
-      .lean();
+    // Find courses - try to populate instructor, but handle gracefully if it fails
+    let courses;
+    try {
+      courses = await Course.find(filter)
+        .populate("instructor", "name email")
+        .sort({ createdAt: -1 })
+        .lean();
+    } catch (populateError) {
+      console.warn('Instructor populate failed, trying without populate:', populateError.message);
+      courses = await Course.find(filter)
+        .sort({ createdAt: -1 })
+        .lean();
+    }
+
+    console.log('Found courses in database:', courses.length);
+    
+    // Log sample course for debugging
+    if (courses.length > 0) {
+      console.log('Sample course data:', {
+        title: courses[0].title,
+        code: courses[0].code,
+        hasInstructor: !!courses[0].instructor,
+        instructorType: typeof courses[0].instructor
+      });
+    }
 
     const coursesWithSeats = courses.map((c) => {
       const enrolledCount = Array.isArray(c.enrolledStudents)
         ? c.enrolledStudents.length
         : 0;
 
+      // Handle instructor field - can be ObjectId, populated object, or string
+      let instructorData = c.instructor;
+      if (instructorData && typeof instructorData === 'object' && instructorData._id && !instructorData.name) {
+        // It's an ObjectId that didn't populate - keep as is or convert to string
+        instructorData = instructorData._id || instructorData;
+      }
+
       return {
         ...c,
+        instructor: instructorData,
         enrolledCount,
         seatsAvailable: Math.max((c.capacity || 0) - enrolledCount, 0),
       };
     });
 
+    console.log('Sending', coursesWithSeats.length, 'courses to frontend');
     res.status(200).json(coursesWithSeats);
   } catch (error) {
-    res.status(500).json({ message: "Error retrieving courses" });
+    console.error('Error retrieving courses:', error);
+    console.error('Error stack:', error.stack);
+    res.status(500).json({ message: "Error retrieving courses", error: error.message });
   }
 }
 
