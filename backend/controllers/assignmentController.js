@@ -2,6 +2,8 @@ const mongoose = require('mongoose');
 const Assignment = require("../models/Assignment");
 const Course = require("../models/Course");
 const AssignmentSubmission = require("../models/AssignmentSubmission");
+const Student = require('../models/student');
+const User = require('../models/User');
 
 /**
  * Requirement 3 – Feature 3
@@ -211,8 +213,7 @@ async function getSubmissionsByAssignment(req, res) {
 async function submitAssignment(req, res) {
   try {
     const assignmentId = req.params.id;
-    const studentId = req.userId;
-    const { content } = req.body; // optional
+    const studentUserId = req.userId;
 
     const assignment = await Assignment.findById(assignmentId);
     if (!assignment) return res.status(404).json({ message: 'Assignment not found' });
@@ -222,14 +223,51 @@ async function submitAssignment(req, res) {
       return res.status(400).json({ message: 'Assignment due date has passed' });
     }
 
-    const existing = await AssignmentSubmission.findOne({ assignment: assignmentId, student: studentId });
+    const existing = await AssignmentSubmission.findOne({ assignment: assignmentId, student: studentUserId });
     if (existing) return res.status(400).json({ message: 'Already submitted' });
 
-    const submission = await AssignmentSubmission.create({
+    // Support multipart/form-data (file upload) via multer middleware
+    const content = req.body?.content || '';
+    const file = req.file;
+
+    const submissionData = {
       assignment: assignmentId,
-      student: studentId,
-      // store content if model extended in future; currently no content field
-    });
+      student: studentUserId,
+    };
+    if (content) submissionData.content = content;
+    if (file) {
+      submissionData.attachment = {
+        filename: file.filename,
+        originalName: file.originalname,
+        mimetype: file.mimetype,
+        path: file.path,
+        size: file.size,
+      };
+    }
+
+    const submission = await AssignmentSubmission.create(submissionData);
+
+    // Update Student assignmentStats (increment submitted)
+    try {
+      const user = await User.findById(studentUserId).select('email');
+      if (user && user.email) {
+        const studentDoc = await Student.findOne({ email: user.email });
+        if (studentDoc) {
+          const courseId = assignment.course;
+          let stat = (studentDoc.assignmentStats || []).find(s => String(s.course) === String(courseId));
+          if (!stat) {
+            studentDoc.assignmentStats = studentDoc.assignmentStats || [];
+            studentDoc.assignmentStats.push({ course: courseId, submitted: 1, pending: 0, overdue: 0 });
+          } else {
+            stat.submitted = (stat.submitted || 0) + 1;
+            if (stat.pending && stat.pending > 0) stat.pending = stat.pending - 1;
+          }
+          await studentDoc.save();
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to update student assignmentStats:', e.message);
+    }
 
     res.status(201).json({ message: 'Submission created', submission });
   } catch (err) {
