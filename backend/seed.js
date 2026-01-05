@@ -73,28 +73,28 @@ async function seed() {
   const instructor = await User.create({
     name: "Dr Smith",
     email: "smith@test.com",
-    password: "password123",
+    password: "Teacher123!",
     role: "teacher",
   });
 
   const studentUser1 = await User.create({
     name: "Alice Student",
     email: "alice@student.com",
-    password: "password123",
+    password: "Student123!",
     role: "student",
   });
 
   const studentUser2 = await User.create({
     name: "Bob Student",
     email: "bob@student.com",
-    password: "password123",
+    password: "Student123!",
     role: "student",
   });
 
   const studentUser3 = await User.create({
     name: "Charlie Student",
     email: "charlie@student.com",
-    password: "password123",
+    password: "Student123!",
     role: "student",
   });
 
