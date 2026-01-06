@@ -1,40 +1,72 @@
-const mongoose = require("mongoose");
-const bcrypt = require("bcryptjs");
 
-const userSchema = new mongoose.Schema(
+const mongoose = require("mongoose");
+const { Schema } = mongoose;
+
+const enrollmentSchema = new Schema(
+  {
+    course: { type: Schema.Types.ObjectId, ref: "Course", required: true },
+    status: {
+      type: String,
+      enum: ["enrolled", "dropped", "completed"],
+      default: "enrolled",
+    },
+  },
+  { _id: false }
+);
+
+const enrollmentHistorySchema = new Schema(
+  {
+    course: { type: Schema.Types.ObjectId, ref: "Course", required: true },
+    status: {
+      type: String,
+      enum: ["enrolled", "dropped", "completed"],
+      required: true,
+    },
+    enrolledAt: {
+      type: Date,
+      default: Date.now,
+    },
+    unenrolledAt: {
+      type: Date,
+      default: null,
+    },
+    reason: {
+      type: String,
+      default: null,
+    },
+  },
+  { _id: true }
+);
+
+const assignmentStatsSchema = new Schema(
+  {
+    course: { type: Schema.Types.ObjectId, ref: "Course", required: true },
+    submitted: { type: Number, default: 0 },
+    pending: { type: Number, default: 0 },
+    overdue: { type: Number, default: 0 },
+  },
+  { _id: false }
+);
+
+const gradePointSchema = new Schema(
+  {
+    termLabel: String,
+    course: { type: Schema.Types.ObjectId, ref: "Course", required: true },
+    score: Number,
+  },
+  { _id: false }
+);
+
+const studentSchema = new Schema(
   {
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
-    password: { type: String, required: true },
-    role: {
-      type: String,
-      enum: ["student", "teacher", "admin"],
-      default: "student",
-    },
+    enrollments: [enrollmentSchema],
+    enrollmentHistory: [enrollmentHistorySchema],
+    assignmentStats: [assignmentStatsSchema],
+    gradeHistory: [gradePointSchema],
   },
   { timestamps: true }
 );
 
-/**
- * DO NOT USE ARROW FUNCTION HERE
- * MUST RECEIVE `next`
- */
-userSchema.pre("save", async function () {
-  if (!this.isModified("password")) return;
-
-  try {
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-  } catch (err) {
-    throw err;
-  }
-});
-
-/**
- * Password comparison
- */
-userSchema.methods.comparePassword = async function (enteredPassword) {
-  return await bcrypt.compare(enteredPassword, this.password);
-};
-
-module.exports = mongoose.model("User", userSchema);
+module.exports = mongoose.model("Student", studentSchema);
