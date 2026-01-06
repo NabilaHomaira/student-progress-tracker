@@ -1,36 +1,63 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
+import { AuthContext } from '../contexts/AuthContext';
 import api from '../services/api';
+import { findStudentByName } from '../services/userService';
 
-// const th = { padding: 8, textAlign: 'left', fontWeight: 'bold', borderBottom: '2px solid #ddd' };
-// const td = { padding: 8, borderBottom: '1px solid #eee' };
+const th = { padding: 8, textAlign: 'left', fontWeight: 'bold', borderBottom: '2px solid #ddd' };
+const td = { padding: 8, borderBottom: '1px solid #eee' };
 
 function safeJson(str) {
   try { return JSON.parse(str); } catch { return null; }
 }
 
 export default function StudentProgress() {
-  const storedUser = safeJson(localStorage.getItem("user"));
+  const { user } = useContext(AuthContext);
+  const isLoggedStudent = Boolean(user && user.role === 'student');
+  const [studentName, setStudentName] = useState(user?.name || "");
   const [studentId, setStudentId] = useState(
-    localStorage.getItem("studentId") || storedUser?._id || ""
+    user?._id || localStorage.getItem("studentId") || ""
   );
   const [data, setData] = useState(null);
   const [submissions, setSubmissions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
-  const [activeTab, setActiveTab] = useState('progress'); // 'progress', 'grades', 'feedback'
 
   const API = process.env.REACT_APP_API_URL?.trim() || "http://localhost:5000";
 
-  const load = async (id) => {
-    const sid = (id || "").trim();
-    if (!sid) return setErr("Enter studentId first.");
+  const load = async (idOrName) => {
+    setErr("");
+    let sid = (idOrName || studentId || '').trim();
+    // if input looks like a name, resolve it
+    if (!sid && studentName) sid = studentName.trim();
+    if (!sid) return setErr("Enter student name first.");
+
+    // if sid is not an ObjectId-like value, try to resolve by name
+    const isIdLike = /^[0-9a-fA-F]{24}$/.test(sid);
+    if (!isIdLike) {
+      const resolved = await findStudentByName(sid).catch(() => null);
+      if (!resolved) return setErr('Student not found for that name');
+      sid = resolved;
+    }
     setLoading(true);
     setErr("");
     try {
-      const r = await fetch(`${API}/api/stats/progress/${sid}`);
-      const j = await r.json().catch(() => ({}));
-      if (!r.ok) throw new Error(j?.message || `Failed (${r.status})`);
-      setData(j);
+      // Use the authenticated-friendly endpoint which accepts either User id or Student id
+      // Use axios `api` so Authorization header is included
+      const overviewResp = await api.get('/stats/student-progress', { params: { studentId: sid } });
+      const overview = overviewResp.data || {};
+
+      // Also fetch grade-history points for term-based chart
+      let pointsResp = { data: null };
+      try {
+        pointsResp = await api.get(`/stats/progress/${sid}`);
+      } catch (e) {
+        // fallback: if the overview returned course grade arrays, we can synthesize some points
+        pointsResp = { data: null };
+      }
+
+      // Minimal normalization; charts removed — focus on feedback
+      const normalized = { studentId: overview.studentId || sid, studentName: overview.studentName || overview.student?.name || '', courses: overview.courses || overview.courseList || [] };
+      setData(normalized);
 
       // Load student's submissions for feedback
       try {
@@ -48,106 +75,54 @@ export default function StudentProgress() {
   };
 
   useEffect(() => {
+    // If the signed-in user is a student, load their data automatically
+    if (isLoggedStudent) {
+      load();
+      return;
+    }
+
     if (studentId) load(studentId);
+    else if (studentName) load(studentName);
   }, []);
 
-  const points = Array.isArray(data?.points) ? data.points : [];
+  // Charts and progress views removed — component focuses on feedback & tips only.
 
   return (
     <div style={{ padding: 16, fontFamily: "system-ui", maxWidth: '1000px', margin: '0 auto' }}>
       <h3 style={{ marginTop: 0 }}>Student Progress & Feedback</h3>
 
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 15 }}>
-        <input
-          value={studentId}
-          onChange={(e) => setStudentId(e.target.value)}
-          placeholder="Enter studentId"
-          style={{ padding: 8, minWidth: 240 }}
-        />
-        <button onClick={() => load(studentId)} disabled={loading} style={{ padding: '8px 16px', cursor: 'pointer' }}>
-          {loading ? "Loading…" : "Load"}
-        </button>
+        {!isLoggedStudent && (
+          <>
+            <input
+              value={studentName}
+              onChange={(e) => setStudentName(e.target.value)}
+              placeholder="Enter student name"
+              style={{ padding: 8, minWidth: 240 }}
+            />
+            <button onClick={() => load(studentName)} disabled={loading} style={{ padding: '8px 16px', cursor: 'pointer' }}>
+              {loading ? "Loading…" : "Load"}
+            </button>
+          </>
+        )}
+        {isLoggedStudent && (
+          <div style={{display:'flex',alignItems:'center',gap:8}}>
+            <div style={{color:'#374151'}}>Viewing your grades and feedback</div>
+            <button onClick={() => load()} disabled={loading} style={{ padding: '8px 16px', cursor: 'pointer' }}>
+              {loading ? "Loading…" : "Refresh"}
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* Tab Navigation */}
-      {data && (
-        <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', borderBottom: '2px solid #e5e7eb' }}>
-          <button 
-            onClick={() => setActiveTab('progress')}
-            style={{
-              padding: '10px 20px',
-              background: activeTab === 'progress' ? '#3498db' : '#f0f0f0',
-              color: activeTab === 'progress' ? 'white' : '#333',
-              border: 'none',
-              borderRadius: '4px 4px 0 0',
-              cursor: 'pointer',
-              fontWeight: activeTab === 'progress' ? '600' : '400'
-            }}
-          >
-            Progress
-          </button>
-          <button 
-            onClick={() => setActiveTab('feedback')}
-            style={{
-              padding: '10px 20px',
-              background: activeTab === 'feedback' ? '#3498db' : '#f0f0f0',
-              color: activeTab === 'feedback' ? 'white' : '#333',
-              border: 'none',
-              borderRadius: '4px 4px 0 0',
-              cursor: 'pointer',
-              fontWeight: activeTab === 'feedback' ? '600' : '400'
-            }}
-          >
-            Feedback & Tips
-          </button>
-        </div>
-      )}
+      {/* Only feedback & tips are shown below */}
 
       {err && <p style={{ color: "crimson" }}>{err}</p>}
 
-      {/* Progress Tab */}
-      {activeTab === 'progress' && data && (
-        <div style={{ marginTop: 12, border: "1px solid #ddd", borderRadius: 12, padding: 12 }}>
-          <div style={{ marginBottom: 8 }}>
-            Student: <b>{data?.studentName || "Unknown"}</b>
-          </div>
-
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr>
-                <th style={th}>Term</th>
-                <th style={th}>Course</th>
-                <th style={th}>Score</th>
-              </tr>
-            </thead>
-            <tbody>
-              {points.map((p, i) => {
-                const key = `${p?.term || "term"}-${p?.courseCode || "code"}-${i}`;
-                return (
-                  <tr key={key}>
-                    <td style={td}>{p?.term || "-"}</td>
-                    <td style={td}>
-                      {p?.courseTitle || "Untitled"} ({p?.courseCode || "NO-CODE"})
-                    </td>
-                    <td style={td}>{typeof p?.score === "number" ? p.score : "-"}</td>
-                  </tr>
-                );
-              })}
-
-              {points.length === 0 && (
-                <tr>
-                  <td colSpan={3} style={{ ...td, color: "#666" }}>
-                    No progress data found.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      )}
+      {/* Progress view removed — only feedback & tips are shown below */}
 
       {/* Feedback Tab */}
-      {activeTab === 'feedback' && data && (
+      {data && (
         <div style={{ marginTop: 12 }}>
           <h4>Assignment Feedback & Learning Tips</h4>
           {submissions.length === 0 ? (
@@ -165,9 +140,18 @@ export default function StudentProgress() {
                   }}
                 >
                   <div style={{ marginBottom: '10px' }}>
-                    <strong>{submission.assignment?.title}</strong>
+                    {(() => {
+                      const courseName = submission.assignment?.course?.title || submission.course?.title || submission.courseTitle || submission.assignment?.courseName || submission.assignment?.course || submission.course?.code || 'Unknown Course';
+                      const assignNum = submission.assignment?.number || submission.assignment?.assignmentNumber || submission.assignment?.index || submission.assignmentNumber || null;
+                      return (
+                        <div style={{marginBottom:6}}>
+                          <div style={{fontWeight:800, color:'#0f172a'}}>{courseName}{assignNum ? ` — Assignment ${assignNum}` : ''}</div>
+                          <div style={{fontSize:14,color:'#374151',marginTop:4}}>{submission.assignment?.title || submission.assignmentTitle || ''}</div>
+                        </div>
+                      );
+                    })()}
                     {submission.score !== undefined && submission.score !== null && (
-                      <div style={{ color: '#3498db', marginTop: '5px' }}>
+                      <div style={{ color: '#3498db', marginTop: '6px' }}>
                         Grade: <strong>{submission.score} / {submission.assignment?.maxScore}</strong>
                       </div>
                     )}
@@ -203,14 +187,3 @@ export default function StudentProgress() {
     </div>
   );
 }
-
-function safeJson(str) {
-  try {
-    return JSON.parse(str);
-  } catch {
-    return null;
-  }
-}
-
-const th = { textAlign: "left", padding: 8, borderBottom: "1px solid #eee" };
-const td = { padding: 8, borderBottom: "1px solid #f3f3f3" };
