@@ -121,17 +121,20 @@ const generatePerStudentReportData = async (studentId) => {
  */
 const generatePerCourseReportData = async (courseId) => {
   try {
-    // Get course details
+    // Get course details with populated enrolledStudents
     const course = await Course.findById(courseId)
       .populate('instructor', 'name')
+      .populate('enrolledStudents', '_id name email')
       .select('title code instructor enrolledStudents');
 
     if (!course) {
       throw new Error('Course not found');
     }
 
-    // Prefer Course.enrolledStudents (references User._id)
-    let studentIds = Array.isArray(course.enrolledStudents) ? course.enrolledStudents : [];
+    // Extract student IDs from populated enrolledStudents
+    let studentIds = Array.isArray(course.enrolledStudents) 
+      ? course.enrolledStudents.map(s => s._id || s) 
+      : [];
 
     // Fallback: find Student docs that list this course
     if (!studentIds.length) {
