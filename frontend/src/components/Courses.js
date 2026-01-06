@@ -12,14 +12,30 @@ export default function Courses(){
   const fetchCourses = async ()=>{
     setLoading(true);
     try{
+      console.log('Fetching courses from API...');
       const res = await api.get('/courses', { params: { showArchived: showArchived } });
-      let list = res.data || [];
+      console.log('Courses API response:', res.data);
+      let list = Array.isArray(res.data) ? res.data : [];
+      console.log('Courses list:', list.length, 'courses found');
+      
       // if user asked to view archived only, filter to archived courses
       if(showArchived){
         list = list.filter(c => c.archived === true);
       }
       setCourses(list);
-    }catch(e){ console.error(e); }
+    }catch(e){ 
+      console.error('Error fetching courses:', e);
+      console.error('Error details:', {
+        message: e.message,
+        response: e.response?.data,
+        status: e.response?.status
+      });
+      // If 401 (unauthorized), try without auth or show message
+      if (e.response?.status === 401) {
+        console.warn('Authentication required. Courses may not load without login.');
+      }
+      setCourses([]); // Set empty array on error
+    }
     setLoading(false);
   };
 
@@ -29,6 +45,24 @@ export default function Courses(){
 
   return (
     <div>
+      {user?.role === 'student' && (
+        <div style={{marginBottom:18}}>
+          <h3 style={{margin:'0 0 8px 0'}}>My Courses</h3>
+          {loading ? (
+            <div style={{textAlign:'center',padding:8}}>Loading...</div>
+          ) : (
+            (() => {
+              const my = (courses || []).filter(c => (c.enrolledStudents || []).some(id => String(id) === user._id || String(id) === user.id));
+              if(my.length === 0) return <div style={{color:'#6b7280',padding:8}}>You are not enrolled in any courses.</div>;
+              return (
+                <div style={{display:'flex',flexDirection:'column',gap:8}}>
+                  {my.map(c => <CourseCard key={c._id} course={c} onChanged={fetchCourses} />)}
+                </div>
+              );
+            })()
+          )}
+        </div>
+      )}
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:12}}>
         <div style={{display:'flex',alignItems:'center',gap:12}}>
           <h2 style={{margin:0}}>Courses</h2>
@@ -58,14 +92,22 @@ export default function Courses(){
         </div>
       </div>
 
-      {loading ? <div style={{textAlign:'center',padding:20}}>Loading...</div> : (
+      {loading ? <div style={{textAlign:'center',padding:20}}>Loading courses...</div> : (
         (() => {
           let list = courses || [];
+          console.log('Rendering courses. Total:', list.length, 'View mode:', viewMode);
           if (viewMode === 'mine' && user) {
             list = list.filter(c => c.instructor && (c.instructor._id === user._id || c.instructor === user._id));
+            console.log('Filtered to my courses:', list.length);
           }
           if (list.length === 0) {
-            return (<div style={{textAlign:'center',color:'#6b7280',padding:40}}>{showArchived ? 'No archived courses' : (viewMode === 'mine' ? 'No courses created by you' : 'No courses available')}</div>);
+            return (
+              <div style={{textAlign:'center',color:'#6b7280',padding:40}}>
+                <div>{showArchived ? 'No archived courses' : (viewMode === 'mine' ? 'No courses created by you' : 'No courses available')}</div>
+                <div style={{marginTop:10,fontSize:'0.9rem'}}>Check browser console (F12) for API response details</div>
+                <button onClick={fetchCourses} className="btn" style={{marginTop:10}}>Refresh</button>
+              </div>
+            );
           }
           return (
             <div style={{display:'flex',flexDirection:'column',gap:12}}>
