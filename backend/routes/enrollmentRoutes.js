@@ -95,5 +95,10 @@ router.patch('/unenroll/:courseId', auth, checkStudent, enrollmentController.une
 // Mark course as completed
 router.post('/courses/:courseId/mark-completed', auth, checkStudent, enrollmentController.markCourseAsCompleted);
 
+// Get enrolled students for a course (for instructors)
+router.get('/course/:courseId', auth, checkInstructorOrEnrollmentPermission, enrollmentController.getCourseEnrolledStudents);
+
 module.exports = router;
+
+
 
