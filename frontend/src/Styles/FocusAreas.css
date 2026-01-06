@@ -1,0 +1,33 @@
+.focus-areas { padding: 16px; border-radius: 10px; background: #ffffff; box-shadow: 0 1px 3px rgba(16,24,40,0.04), 0 6px 24px rgba(16,24,40,0.06); border: 1px solid #eef2f7; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; }
+.focus-areas .card-header{ display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+.focus-areas h3 { margin: 0; font-size: 1.05rem; }
+.focus-areas .header-actions { display:flex; gap:12px; align-items:center; }
+.focus-areas .user-badge{ color:#334155; font-size:0.9rem }
+.focus-areas .btn-link{ background:transparent; border:none; color:#2563eb; cursor:pointer; padding:6px 8px; border-radius:6px }
+.focus-areas .btn-link:disabled{ opacity:0.6; cursor:default }
+.fa-grid{ display:grid; grid-template-columns: 1fr; gap:16px; }
+.fa-column h4{ margin:8px 0 10px 0; font-size:0.98rem }
+.course-list, .assignment-list{ list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:10px }
+.course-item, .assignment-item{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:12px; border-radius:8px; background:linear-gradient(180deg, #ffffff, #fbfdff); border:1px solid #f1f5f9 }
+.course-left{ display:flex; flex-direction:column }
+.course-title{ font-weight:700; color:#0f172a }
+.course-meta{ color:#64748b; font-size:0.9rem }
+.course-right{ text-align:right }
+.badge{ display:inline-block; min-width:30px; padding:6px 8px; border-radius:999px; font-weight:700; color:white; font-size:0.85rem }
+.badge.danger{ background:#ef4444 }
+.muted{ color:#64748b }
+.small{ font-size:0.85rem }
+.assignment-item{ flex-direction:column; align-items:stretch }
+.assignment-item .assign-left{ display:flex; flex-direction:column; }
+.assign-title{ font-weight:600; color:#0f172a }
+.assign-course{ color:#64748b; font-size:0.9rem }
+.assign-right{ display:flex; gap:12px; align-items:center; margin-top:8px }
+.scores{ font-weight:700; color:#1e293b }
+.class-avg{ font-size:0.9rem }
+.assign-progress{ margin-top:8px }
+.progress-bar{ height:8px; background:#eef2f7; border-radius:999px; overflow:hidden }
+.progress-fill{ height:100%; background:linear-gradient(90deg,#3b82f6,#60a5fa) }
+.muted{ color:#64748b }
+.error{ color:#b91c1c }
+
+@media(min-width:900px){ .fa-grid{ grid-template-columns: 1fr 1fr } }
