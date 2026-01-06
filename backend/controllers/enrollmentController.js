@@ -327,6 +327,44 @@ exports.unenrollFromCourse = async (req, res) => {
   }
 };
 
+/* ======================================================
+   GET ENROLLED STUDENTS FOR A COURSE
+   Used by instructors to see all students enrolled in their course
+====================================================== */
+exports.getCourseEnrolledStudents = async (req, res) => {
+  try {
+    const { courseId } = req.params;
+    const userId = req.userId;
+
+    // Get the course
+    const course = await Course.findById(courseId).populate('enrolledStudents', 'name email _id');
+    if (!course) {
+      return res.status(404).json({ message: 'Course not found' });
+    }
+
+    // Check if user is instructor or assistant for this course
+    const isInstructor = course.instructor.toString() === userId;
+    const isAssistant = course.assistants?.some(
+      (a) => a.user.toString() === userId
+    );
+
+    if (!isInstructor && !isAssistant) {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    // Return enrolled students with their details
+    const enrolledStudentsData = course.enrolledStudents.map((student) => ({
+      _id: student._id,
+      name: student.name,
+      email: student.email,
+    }));
+
+    res.status(200).json(enrolledStudentsData);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
 exports.markCourseAsCompleted = async (req, res) => {
   return res.status(501).json({ message: 'Not implemented: markCourseAsCompleted' });
 };
