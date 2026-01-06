@@ -28,7 +28,11 @@ exports.getSubmissionsByCourse = async (req, res) => {
       assignment: { $in: assignmentIds },
     })
       .populate("student", "name email")
-      .populate("assignment", "title maxScore course")
+      .populate({
+        path: "assignment",
+        select: "title maxScore course",
+        populate: { path: "course", select: "title code" },
+      })
       .sort({ submittedAt: -1 });
 
     return res.status(200).json(submissions);
@@ -52,7 +56,11 @@ exports.getSubmission = async (req, res) => {
 
     const submission = await AssignmentSubmission.findById(submissionId)
       .populate("student", "name email")
-      .populate("assignment", "title maxScore instructions");
+      .populate({
+        path: "assignment",
+        select: "title maxScore instructions course",
+        populate: { path: "course", select: "title code" },
+      });
 
     if (!submission) {
       return res.status(404).json({ message: "Submission not found" });
@@ -141,7 +149,11 @@ exports.getAssignmentSubmissions = async (req, res) => {
       assignment: assignmentId,
     })
       .populate("student", "name email")
-      .populate("assignment", "title maxScore")
+      .populate({
+        path: "assignment",
+        select: "title maxScore course",
+        populate: { path: "course", select: "title code" },
+      })
       .sort({ submittedAt: 1 });
 
     return res.status(200).json(submissions);
@@ -167,7 +179,11 @@ exports.getStudentSubmissions = async (req, res) => {
       student: studentId,
     })
       .populate("student", "name email")
-      .populate("assignment", "title maxScore course")
+      .populate({
+        path: "assignment",
+        select: "title maxScore course",
+        populate: { path: "course", select: "title code" },
+      })
       .sort({ submittedAt: -1 });
 
     return res.status(200).json(submissions);
