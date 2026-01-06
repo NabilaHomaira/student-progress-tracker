@@ -47,6 +47,15 @@ export default function CourseCard({ course, onChanged }){
 
   const [pendingMap,setPendingMap]=useState({});
   const [confirmState,setConfirmState]=useState({ open:false, message:'', onConfirm:null });
+  const [showAssignmentsModal, setShowAssignmentsModal] = useState(false);
+  const [courseAssignments, setCourseAssignments] = useState([]);
+  const [loadingAssignments, setLoadingAssignments] = useState(false);
+  const [showSubmitModal, setShowSubmitModal] = useState(false);
+  const [submitTarget, setSubmitTarget] = useState(null);
+  const [submitText, setSubmitText] = useState('');
+  const [submitFile, setSubmitFile] = useState(null);
+  const [submitLoading, setSubmitLoading] = useState(false);
+  const [submitError, setSubmitError] = useState('');
 
   const askConfirm = (message, cb) => {
     setConfirmState({ open:true, message, onConfirm: ()=>{ try{ cb(); } finally { setConfirmState({ open:false, message:'', onConfirm:null }); } } });
@@ -115,6 +124,31 @@ export default function CourseCard({ course, onChanged }){
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginTop:8}}>
         <div style={{color:'#6b7280',fontSize:13}}>Enrolled: <strong style={{color:'#0f172a'}}>{course.enrolledCount}</strong> / {course.capacity || '—'}</div>
         <div style={{display:'flex',gap:8}}>
+          {/* View Assignments - visible to instructors/admins and to students who are enrolled */}
+          {user && (user.role !== 'student' || (course.enrolledStudents || []).some(id => String(id) === user._id || String(id) === user.id)) && (
+            <button onClick={async()=>{
+              setShowAssignmentsModal(true);
+              setLoadingAssignments(true);
+              try{
+                const res = await api.get(`/assignments/course/${course._id}`);
+                const list = Array.isArray(res.data) ? res.data : [];
+
+                // If student, fetch upcoming deadlines to know submission status
+                if(user?.role === 'student'){
+                  try{
+                    const dl = await api.get('/assignments/deadlines/upcoming');
+                    const deadlines = Array.isArray(dl.data) ? dl.data : [];
+                    const submittedSet = new Set(deadlines.filter(d => d.isSubmitted).map(d => String(d._id)));
+                    // attach isSubmitted flag if matches
+                    list.forEach(a => { a.isSubmitted = submittedSet.has(String(a._id)); });
+                  }catch(e){ console.warn('Failed to load deadlines for submission status', e); }
+                }
+
+                setCourseAssignments(list);
+              }catch(e){ console.error('Failed to load course assignments', e); setCourseAssignments([]); }
+              setLoadingAssignments(false);
+            }} className="btn">View Assignments</button>
+          )}
           {/* Hide Stats button entirely for students */}
           {user?.role !== 'student' && (
             <button onClick={()=>setShowStats(true)} className="btn">Stats</button>
@@ -168,6 +202,82 @@ export default function CourseCard({ course, onChanged }){
         </div>
       )}
       <Toaster message={message} type={(message||'').toLowerCase().includes('failed') ? 'error' : 'info'} onClose={()=>setMessage('')} />
+      {showAssignmentsModal && (
+        <div style={{position:'fixed',inset:0,display:'flex',alignItems:'center',justifyContent:'center',background:'rgba(0,0,0,0.45)',zIndex:1200}}>
+          <div style={{background:'#fff',padding:20,borderRadius:12,minWidth:420,boxShadow:'0 12px 30px rgba(0,0,0,0.18)'}}>
+            <h3 style={{marginTop:0}}>Assignments for {course.title}</h3>
+            {loadingAssignments ? (
+              <div>Loading...</div>
+            ) : (
+              <div style={{maxHeight:350,overflow:'auto'}}>
+                {courseAssignments.length===0 && <div style={{color:'#6b7280'}}>No assignments</div>}
+                <ul style={{paddingLeft:18}}>
+                  {courseAssignments.map(a=> (
+                      <li key={a._id} style={{marginBottom:10}}>
+                        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                          <div style={{fontWeight:700}}>{a.title}</div>
+                          {user?.role === 'student' && (
+                            (() => {
+                              const due = a.dueDate ? new Date(a.dueDate) : null;
+                              const pastDue = due ? due < new Date() : false;
+                              if (a.isSubmitted) return <span style={{color:'#10b981',fontWeight:700}}>Submitted</span>;
+                              if (pastDue) return <span style={{color:'#ef4444',fontWeight:700}}>Closed</span>;
+                              return <button className="btn" style={{background:'#4f46e5',color:'#fff'}} onClick={()=>{
+                                setSubmitTarget(a);
+                                setSubmitText('');
+                                setSubmitFile(null);
+                                setSubmitError('');
+                                setShowSubmitModal(true);
+                              }}>Submit</button>;
+                            })()
+                          )}
+                        </div>
+                        <div style={{color:'#6b7280',fontSize:13}}>{a.instructions?.substring(0,120)}{(a.instructions||'').length>120?'...':''}</div>
+                        <div style={{color:'#374151',fontSize:13,marginTop:6}}>Due: {new Date(a.dueDate).toLocaleString()}</div>
+                      </li>
+                    ))}
+                </ul>
+              </div>
+            )}
+            <div style={{display:'flex',justifyContent:'flex-end',marginTop:12}}>
+              <button className="btn" onClick={()=>setShowAssignmentsModal(false)}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
+      {showSubmitModal && submitTarget && (
+        <div style={{position:'fixed',inset:0,display:'flex',alignItems:'center',justifyContent:'center',background:'rgba(0,0,0,0.45)',zIndex:1250}}>
+          <div style={{background:'#fff',padding:20,borderRadius:12,minWidth:480,boxShadow:'0 12px 30px rgba(0,0,0,0.18)'}}>
+            <h3 style={{marginTop:0}}>Submit: {submitTarget.title}</h3>
+            {submitError && <div style={{color:'red',marginBottom:8}}>{submitError}</div>}
+            <div style={{marginBottom:8}}>
+              <label style={{display:'block',fontWeight:600}}>Write your answer (optional)</label>
+              <textarea value={submitText} onChange={e=>setSubmitText(e.target.value)} rows={6} style={{width:'100%',padding:8}} />
+            </div>
+            <div style={{marginBottom:8}}>
+              <label style={{display:'block',fontWeight:600}}>Attach a file (optional)</label>
+              <input type="file" onChange={e=>setSubmitFile(e.target.files[0] || null)} />
+            </div>
+            <div style={{display:'flex',justifyContent:'flex-end',gap:8,marginTop:12}}>
+              <button className="btn" onClick={()=>{ setShowSubmitModal(false); setSubmitTarget(null); setSubmitFile(null); setSubmitText(''); }}>Cancel</button>
+              <button className="btn" style={{background:'#4f46e5',color:'#fff'}} onClick={async()=>{
+                setSubmitLoading(true); setSubmitError('');
+                try{
+                  const fd = new FormData();
+                  if(submitText) fd.append('content', submitText);
+                  if(submitFile) fd.append('attachment', submitFile);
+                  const res = await api.post(`/assignments/${submitTarget._id}/submit`, fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+                  // mark submitted locally
+                  setCourseAssignments(prev => prev.map(p => p._id === submitTarget._id ? { ...p, isSubmitted: true } : p));
+                  setMessage('Assignment submitted successfully');
+                  setShowSubmitModal(false); setSubmitTarget(null); setSubmitFile(null); setSubmitText('');
+                }catch(e){ console.error('Submit failed', e); setSubmitError(e.response?.data?.message || e.message || 'Submit failed'); }
+                setSubmitLoading(false);
+              }}>{submitLoading ? 'Submitting...' : 'Submit'}</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
