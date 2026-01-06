@@ -13,7 +13,10 @@ export default function EnrollmentHistory(){
         const res = await api.get('/enrollments/history');
         if(!mounted) return;
         setHistory(res.data || []);
-      }catch(e){ console.error(e); }
+      }catch(e){ 
+        console.error('Error loading enrollment history:', e);
+        setHistory([]); // Set empty array on error
+      }
       setLoading(false);
     };
     load();
