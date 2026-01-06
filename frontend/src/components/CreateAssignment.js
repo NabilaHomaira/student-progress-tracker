@@ -270,12 +270,7 @@ export default function CreateAssignment({ onAssignmentCreated }) {
         </button>
       </form>
 
-      <div className="info-box">
-        <p>
-          💡 <strong>Tip:</strong> After creating an assignment, you can duplicate it to other courses
-          to save time! Requirement 3, Feature 2 enabled.
-        </p>
-      </div>
+      {/* Tip box removed per request */}
     </div>
   );
 }
