@@ -44,6 +44,7 @@ export default function Home(){
     ? courses.filter(c => (c.enrolledStudents || []).some(id => id === user._id || id === user.id))
     : [];
 
+
   return (
     <div style={{maxWidth:980,margin:'2rem auto'}}>
       <div style={{display:'flex',gap:20,alignItems:'center',marginBottom:20}}>
@@ -56,10 +57,42 @@ export default function Home(){
         </div>
       </div>
 
-      {/* Upcoming Deadlines - Previous Feature */}
-      <div style={{marginBottom: '2rem'}}>
-        <UpcomingDeadlines />
-      </div>
+      {/* Upcoming Deadlines - show only for students */}
+      {user?.role === 'student' && (
+        <div style={{marginBottom: '2rem'}}>
+          <UpcomingDeadlines />
+        </div>
+      )}
+
+      {/* NEW: Grade Management Features - Prominent Display */}
+      {user?.role !== 'student' ? (
+        <div style={{marginBottom: '2rem', padding: '1.5rem', background: '#f0f9ff', border: '2px solid #0284c7', borderRadius: '8px'}}>
+          <h3 style={{marginTop: 0, color: '#0c4a6e'}}>📊 Grade Management Features</h3>
+          <p style={{color: '#0c4a6e', marginBottom: '1rem'}}>Access the new grade management system to manage grades, feedback, reports, and trend analysis:</p>
+          <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1rem'}}>
+            <Link to="/instructor-dashboard" className="btn" style={{background: '#0284c7', color: '#fff', padding: '0.75rem', textAlign: 'center', textDecoration: 'none', borderRadius: '6px'}}>
+              ✓ Grade Management Dashboard
+            </Link>
+            <div style={{padding: '1rem', background: '#fff', borderRadius: '6px', border: '1px solid #0284c7'}}>
+              <strong style={{color: '#0c4a6e'}}>Features Available:</strong>
+              <ul style={{margin: '0.5rem 0', paddingLeft: '1.5rem', fontSize: '0.9rem', color: '#0c4a6e'}}>
+                <li>Enter & Update Grades</li>
+                <li>Add Feedback & Tips</li>
+                <li>View Trends</li>
+                <li>Generate Reports</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div style={{marginBottom: '2rem', padding: '1rem', background: '#f0fdf4', border: '2px solid #16a34a', borderRadius: '8px'}}>
+          <h3 style={{marginTop: 0, color: '#15803d'}}>📚 Your Grades & Feedback</h3>
+          <p style={{color: '#15803d', marginBottom: '0.5rem'}}>Below are your recent grades and teacher feedback — tap any item for more details.</p>
+          <div style={{marginTop:12}}>
+            <Link to="/student-progress" className="btn" style={{background: '#16a34a', color: '#fff', padding: '0.5rem 0.9rem', textDecoration: 'none', borderRadius: '6px'}}>Open Your Grades & Feedback</Link>
+          </div>
+        </div>
+      )}
 
       {user?.role === 'student' ? (
         <div style={{display:'grid',gridTemplateColumns:'repeat(2,1fr)',gap:16,marginBottom:20}}>
@@ -68,8 +101,11 @@ export default function Home(){
             <div style={{fontSize:28,fontWeight:700,marginTop:8}}>{loading ? '—' : (enrolledForUser.length)}</div>
           </div>
           <div className="card">
-            <h4 style={{margin:0}}>Upcoming items</h4>
-            <div style={{color:'#6b7280',marginTop:8}}>No upcoming items — check your course pages.</div>
+            <h4 style={{margin:0}}>Quick Student Tools</h4>
+              <div style={{display:'flex',flexDirection:'column',gap:8,marginTop:8}}>
+              <a href="/focus-areas" className="btn btn-amber">Focus Areas</a>
+              <a href="/badges" className="btn" style={{background:'#8b5cf6'}}>Badges</a>
+            </div>
           </div>
         </div>
       ) : (
