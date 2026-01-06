@@ -270,17 +270,7 @@ export default function AssignmentDashboard() {
                             </div>
                           )}
                         </div>
-                        <div className="assignment-card-footer">
-                          <button
-                            className="btn-secondary"
-                            onClick={() => {
-                              // Navigate to assignment details or edit
-                              console.log('View assignment:', assignment._id);
-                            }}
-                          >
-                            View Details
-                          </button>
-                        </div>
+                        {/* Footer removed: 'View Details' button intentionally omitted */}
                       </div>
                     );
                   })}
