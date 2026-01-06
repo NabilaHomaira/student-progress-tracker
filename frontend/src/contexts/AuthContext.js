@@ -44,12 +44,30 @@ export function AuthProvider({ children }){
     return res;
   };
 
-  const register = async (name, email, password, role='teacher') => {
-    const res = await api.post('/auth/register', { name, email, password, role });
-    setToken(res.data.token);
-    setUser(res.data.user);
-    setLoading(false);
-    return res;
+  const register = async (name, email, password, role='student') => {
+    try {
+      console.log('Attempting registration:', { name, email, role });
+      const res = await api.post('/auth/register', { name, email, password, role });
+      console.log('Registration response:', res.data);
+      
+      if (res.data && res.data.token && res.data.user) {
+        setToken(res.data.token);
+        setUser(res.data.user);
+        setLoading(false);
+        return res;
+      } else {
+        throw new Error('Invalid response from server');
+      }
+    } catch (error) {
+      console.error('Registration error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        request: error.request
+      });
+      setLoading(false);
+      throw error; // Re-throw to let component handle it
+    }
   };
 
   const logout = async () => {
