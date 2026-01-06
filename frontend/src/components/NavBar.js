@@ -17,16 +17,26 @@ export default function NavBar(){
         <Link to="/" style={{color:'#fff',textDecoration:'none',fontWeight:700,fontSize:18}}>Student Progress Tracker</Link>
       </div>
       <div style={{display:'flex',gap:12,alignItems:'center'}}>
-        {user ? (
-            <>
-            <span style={{opacity:0.9,fontSize:14}}>{user.name} <span style={{opacity:0.6,fontSize:13}}>({user.role})</span></span>
+        {user && (
+          <>
+            <Link to="/home" style={{color:'#fff',textDecoration:'none'}}>Home</Link>
             <Link to="/courses" style={{color:'#fff',textDecoration:'none'}}>Courses</Link>
             {user.role === 'student' && (
-              <Link to="/enrollment-history" style={{color:'#fff',textDecoration:'none'}}>My Enrollments</Link>
+              <Link to="/enrollment-history" style={{color:'#fff',textDecoration:'none'}}>Enrollment History</Link>
             )}
-            {user.role === 'teacher' && (
-              <Link to="/instructor-dashboard" style={{color:'#fff',textDecoration:'none'}}>Instructor Dashboard</Link>
+            {/* Instructor and Assignment dashboards hidden for students */}
+            {user.role !== 'student' && (
+              <>
+                <Link to="/instructor-dashboard" style={{color:'#fff',textDecoration:'none'}}>Instructor Dashboard</Link>
+                <Link to="/assignments" style={{color:'#fff',textDecoration:'none'}}>Assignments</Link>
+              </>
             )}
+          </>
+        )}
+
+        {user ? (
+          <>
+            <span style={{opacity:0.9,fontSize:14}}>{user.name} <span style={{opacity:0.6,fontSize:13}}>({user.role})</span></span>
             <button onClick={doLogout} className="btn" style={{background:'#ef4444',color:'#fff'}}>Logout</button>
           </>
         ) : (
