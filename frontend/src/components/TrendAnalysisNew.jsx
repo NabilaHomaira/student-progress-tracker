@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getTrendAnalysis } from '../services/statsService';
 import api from '../services/api';
+import { findStudentByName } from '../services/userService';
 import '../styles/TrendAnalysis.css';
 
 // Simple line chart implementation
@@ -14,6 +15,10 @@ const SimpleLineChart = ({ data, studentSeries, classSeries }) => {
     ...classSeries.map((c) => c.score || 0)
   );
 
+  // Guard against all-zero or non-numeric scores which would make maxScore 0
+  // and cause divisions by zero when plotting. Use 1 as a safe minimum.
+  const safeMaxScore = maxScore > 0 ? maxScore : 1;
+
   const chartHeight = 300;
   const chartWidth = 600;
   const padding = 40;
@@ -24,12 +29,12 @@ const SimpleLineChart = ({ data, studentSeries, classSeries }) => {
 
   const studentPoints = studentSeries.map((s, idx) => ({
     x: padding + (idx * plotWidth) / (studentSeries.length - 1 || 1),
-    y: chartHeight - padding - (s.score / maxScore) * plotHeight,
+    y: chartHeight - padding - ((s.score || 0) / safeMaxScore) * plotHeight,
   }));
 
   const classPoints = classSeries.map((c, idx) => ({
     x: padding + (idx * plotWidth) / (classSeries.length - 1 || 1),
-    y: chartHeight - padding - (c.score / maxScore) * plotHeight,
+    y: chartHeight - padding - ((c.score || 0) / safeMaxScore) * plotHeight,
   }));
 
   const studentPathD = studentPoints
@@ -121,7 +126,7 @@ const SimpleLineChart = ({ data, studentSeries, classSeries }) => {
             textAnchor="end"
             fontSize="12"
           >
-            {Math.round((maxScore * (4 - i)) / 4)}
+            {Math.round((safeMaxScore * (4 - i)) / 4)}
           </text>
         ))}
 
@@ -155,7 +160,7 @@ const SimpleLineChart = ({ data, studentSeries, classSeries }) => {
 };
 
 export default function TrendAnalysis() {
-  const [studentId, setStudentId] = useState('');
+  const [studentName, setStudentName] = useState('');
   const [courseId, setCourseId] = useState('');
   const [data, setData] = useState(null);
   const [courses, setCourses] = useState([]);
@@ -177,16 +182,19 @@ export default function TrendAnalysis() {
   };
 
   const load = async () => {
-    if (!studentId.trim() && !courseId.trim()) {
-      setErr('Enter student ID or select a course for trend analysis');
+    if (!studentName.trim() && !courseId.trim()) {
+      setErr('Enter student name or select a course for trend analysis');
       return;
     }
     setLoading(true);
     setErr(null);
     try {
       let res;
-      if (studentId.trim()) {
-        res = await getTrendAnalysis(studentId.trim());
+      if (studentName.trim()) {
+        // resolve name -> id
+        const sid = await findStudentByName(studentName.trim());
+        if (!sid) throw new Error('Student not found for that name');
+        res = await getTrendAnalysis(sid);
       } else {
         // Load class trend data for a course
         const submissionsResponse = await api.get(
@@ -243,12 +251,12 @@ export default function TrendAnalysis() {
 
       <div className="trend-controls">
         <div className="input-group">
-          <label htmlFor="student-input">Student ID (optional):</label>
+          <label htmlFor="student-input">Student Name (optional):</label>
           <input
             id="student-input"
-            placeholder="Enter student ID"
-            value={studentId}
-            onChange={(e) => setStudentId(e.target.value)}
+            placeholder="Enter student name"
+            value={studentName}
+            onChange={(e) => setStudentName(e.target.value)}
             disabled={loading}
           />
         </div>
