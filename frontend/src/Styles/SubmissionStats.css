@@ -1,0 +1,244 @@
+.submission-stats-container {
+  padding: 2rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.submission-stats-container h2 {
+  margin-top: 0;
+  margin-bottom: 2rem;
+  font-size: 1.75rem;
+  color: #1f2937;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.stats-loading,
+.stats-error {
+  padding: 1rem;
+  text-align: center;
+  border-radius: 8px;
+  margin: 1rem 0;
+}
+
+.stats-loading {
+  color: #6b7280;
+  background: #f9fafb;
+}
+
+.stats-error {
+  color: #dc2626;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+}
+
+.course-selector {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  padding: 1rem;
+  background: #f9fafb;
+  border-radius: 8px;
+}
+
+.course-selector label {
+  font-weight: 600;
+  color: #374151;
+  font-size: 1rem;
+}
+
+.course-selector select {
+  padding: 0.75rem 1rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  background: white;
+  font-size: 1rem;
+  cursor: pointer;
+  min-width: 300px;
+  transition: border-color 0.2s ease;
+}
+
+.course-selector select:hover {
+  border-color: #4f46e5;
+}
+
+.course-selector select:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.stat-card {
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1.5rem;
+  text-align: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.stat-card:hover {
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  transform: translateY(-4px);
+}
+
+.stat-card-submitted {
+  border-left: 6px solid #10b981;
+  background: linear-gradient(to right, #d1fae5 0%, white 10%);
+}
+
+.stat-card-pending {
+  border-left: 6px solid #f59e0b;
+  background: linear-gradient(to right, #fef3c7 0%, white 10%);
+}
+
+.stat-card-overdue {
+  border-left: 6px solid #ef4444;
+  background: linear-gradient(to right, #fee2e2 0%, white 10%);
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  color: #6b7280;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.5rem;
+}
+
+.stat-value {
+  font-size: 3rem;
+  font-weight: 700;
+  color: #1f2937;
+  line-height: 1;
+  margin: 0.5rem 0;
+}
+
+.stat-card-submitted .stat-value {
+  color: #10b981;
+}
+
+.stat-card-pending .stat-value {
+  color: #f59e0b;
+}
+
+.stat-card-overdue .stat-value {
+  color: #ef4444;
+}
+
+.stat-description {
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin-top: 0.5rem;
+}
+
+.course-info {
+  margin-bottom: 2rem;
+  padding: 1rem;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  border-left: 4px solid #3b82f6;
+}
+
+.course-info h3 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.25rem;
+  color: #1e40af;
+  font-weight: 700;
+}
+
+.course-info p {
+  margin: 0;
+  color: #1e3a8a;
+  font-size: 0.95rem;
+}
+
+.stats-summary {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.stats-summary h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1.1rem;
+  color: #374151;
+  font-weight: 600;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+}
+
+.summary-label {
+  font-weight: 600;
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.summary-value {
+  font-weight: 700;
+  color: #1f2937;
+  font-size: 1.1rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .submission-stats-container {
+    padding: 1.5rem;
+  }
+
+  .course-selector {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .course-selector select {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .submission-stats-container {
+    padding: 1rem;
+  }
+
+  .stat-value {
+    font-size: 2.5rem;
+  }
+}
+

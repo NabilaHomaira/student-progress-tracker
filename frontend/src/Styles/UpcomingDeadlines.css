@@ -1,0 +1,152 @@
+.upcoming-deadlines-container {
+  padding: 16px;
+  border-bottom: 1px solid #ddd;
+}
+
+.upcoming-deadlines-container h2 {
+  margin-top: 0;
+  margin-bottom: 16px;
+  font-size: 1.5rem;
+}
+
+.loading,
+.error,
+.no-deadlines {
+  padding: 12px;
+  margin: 8px 0;
+}
+
+.error {
+  color: crimson;
+  background-color: #ffe6e6;
+  border: 1px solid #ff9999;
+  border-radius: 4px;
+}
+
+.no-deadlines {
+  color: #666;
+  font-style: italic;
+}
+
+.deadlines-list {
+  display: grid;
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.deadline-card {
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  padding: 16px;
+  background-color: #fff;
+  transition: box-shadow 0.2s ease;
+}
+
+.deadline-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Red urgency - Due today/overdue */
+.deadline-card.urgency-red {
+  border-left: 6px solid #dc3545;
+  background-color: #fff5f5;
+}
+
+.urgency-red .urgency-badge {
+  background-color: #dc3545;
+  color: white;
+}
+
+/* Yellow urgency - Due within 3 days */
+.deadline-card.urgency-yellow {
+  border-left: 6px solid #ffc107;
+  background-color: #fffef5;
+}
+
+.urgency-yellow .urgency-badge {
+  background-color: #ffc107;
+  color: #333;
+}
+
+/* Green urgency - Due later */
+.deadline-card.urgency-green {
+  border-left: 6px solid #28a745;
+  background-color: #f5fff5;
+}
+
+.urgency-green .urgency-badge {
+  background-color: #28a745;
+  color: white;
+}
+
+.deadline-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.deadline-title {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #333;
+  flex: 1;
+  min-width: 200px;
+}
+
+.urgency-badge {
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.deadline-details {
+  display: grid;
+  gap: 8px;
+}
+
+.deadline-details p {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.deadline-course,
+.deadline-date,
+.deadline-score {
+  color: #555;
+}
+
+.deadline-instructions {
+  color: #666;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #eee;
+  font-size: 0.9rem;
+}
+
+.deadline-details strong {
+  color: #333;
+  font-weight: 600;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .deadline-header {
+    flex-direction: column;
+  }
+
+  .deadline-title {
+    width: 100%;
+  }
+
+  .urgency-badge {
+    align-self: flex-start;
+  }
+}
+
