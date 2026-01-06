@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import api from '../services/api';
 import { AuthContext } from '../contexts/AuthContext';
+import UpcomingDeadlines from './UpcomingDeadlines';
 
 export default function Home(){
   const [courses, setCourses] = useState([]);
@@ -13,10 +14,20 @@ export default function Home(){
     const load = async ()=>{
       setLoading(true);
       try{
+        console.log('Home: Fetching courses...');
         const res = await api.get('/courses');
         if(!mounted) return;
-        setCourses(res.data || []);
-      }catch(e){ console.error(e); }
+        const coursesList = Array.isArray(res.data) ? res.data : [];
+        console.log('Home: Loaded', coursesList.length, 'courses');
+        setCourses(coursesList);
+      }catch(e){ 
+        console.error('Error loading courses:', e);
+        console.error('Error status:', e.response?.status);
+        if (e.response?.status === 401) {
+          console.warn('Authentication required for courses');
+        }
+        setCourses([]); // Set empty array on error
+      }
       setLoading(false);
     };
     load();
@@ -43,6 +54,11 @@ export default function Home(){
         <div>
           <Link to="/courses" className="btn" style={{background:'#4f46e5',color:'#fff'}}>Go to Courses</Link>
         </div>
+      </div>
+
+      {/* Upcoming Deadlines - Previous Feature */}
+      <div style={{marginBottom: '2rem'}}>
+        <UpcomingDeadlines />
       </div>
 
       {user?.role === 'student' ? (
