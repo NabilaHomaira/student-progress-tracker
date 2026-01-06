@@ -1,0 +1,281 @@
+/* Trend Analysis Component */
+
+.trend-analysis {
+  padding: 20px;
+  background-color: #f5f5f5;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.trend-analysis h2 {
+  color: #333;
+  margin-bottom: 20px;
+  font-size: 24px;
+}
+
+.trend-controls {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  align-items: flex-end;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  min-width: 250px;
+}
+
+.input-group label {
+  font-weight: 600;
+  color: #333;
+  font-size: 14px;
+}
+
+.input-group input,
+.input-group select {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  background-color: white;
+}
+
+.input-group input:focus,
+.input-group select:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+.input-group select {
+  cursor: pointer;
+}
+
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.btn-primary {
+  background-color: #3498db;
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: #2980b9;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.btn-primary:disabled {
+  background-color: #bdc3c7;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.loading,
+.error {
+  text-align: center;
+  padding: 20px;
+  border-radius: 4px;
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+.loading {
+  background-color: #e3f2fd;
+  color: #1976d2;
+}
+
+.error {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.trend-results {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.chart-container {
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.trend-chart {
+  max-width: 100%;
+  height: auto;
+  border: 1px solid #eee;
+  border-radius: 4px;
+  background-color: #fafafa;
+}
+
+.chart-legend {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  margin-top: 15px;
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: #666;
+}
+
+.legend-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 2px;
+}
+
+.student-color {
+  background-color: #3498db;
+}
+
+.class-color {
+  background-color: #e74c3c;
+}
+
+.trend-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+  overflow-x: auto;
+}
+
+.trend-table th {
+  background-color: #f0f0f0;
+  padding: 12px;
+  text-align: left;
+  font-weight: 600;
+  color: #333;
+  border-bottom: 2px solid #ddd;
+  font-size: 14px;
+}
+
+.trend-table td {
+  padding: 12px;
+  border-bottom: 1px solid #eee;
+  color: #666;
+  font-size: 14px;
+}
+
+.trend-table tbody tr:hover {
+  background-color: #f9f9f9;
+}
+
+.trend-table td.positive {
+  color: #27ae60;
+  font-weight: 600;
+}
+
+.trend-table td.negative {
+  color: #e74c3c;
+  font-weight: 600;
+}
+
+.trend-insights {
+  background-color: #f9f9f9;
+  padding: 20px;
+  border-radius: 4px;
+  border-left: 4px solid #3498db;
+}
+
+.trend-insights h3 {
+  margin: 0 0 15px 0;
+  color: #333;
+  font-size: 16px;
+}
+
+.trend-insights p {
+  margin: 10px 0;
+  color: #666;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.trend-insights p:first-of-type {
+  margin-top: 0;
+}
+
+.insight-positive {
+  color: #27ae60;
+  font-weight: 600;
+  background-color: #e8f5e9;
+  padding: 10px;
+  border-radius: 4px;
+}
+
+.insight-negative {
+  color: #c0392b;
+  font-weight: 600;
+  background-color: #ffebee;
+  padding: 10px;
+  border-radius: 4px;
+}
+
+.insight-neutral {
+  color: #3498db;
+  font-weight: 600;
+  background-color: #e3f2fd;
+  padding: 10px;
+  border-radius: 4px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .trend-controls {
+    flex-direction: column;
+    gap: 15px;
+    align-items: stretch;
+  }
+
+  .input-group {
+    min-width: 100%;
+  }
+
+  .btn {
+    width: 100%;
+  }
+
+  .trend-chart {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  .chart-legend {
+    gap: 15px;
+  }
+
+  .trend-results {
+    padding: 15px;
+  }
+
+  .trend-table {
+    font-size: 12px;
+  }
+
+  .trend-table th,
+  .trend-table td {
+    padding: 8px;
+  }
+}
