@@ -66,7 +66,23 @@ router.get("/trends/:courseId/:studentId", async (req, res) => {
   try {
     const { courseId, studentId } = req.params;
     const allStudents = await Student.find({});
-    const target = allStudents.find((s) => String(s._id) === String(studentId));
+
+    // Try direct Student._id match
+    let target = allStudents.find((s) => String(s._id) === String(studentId));
+
+    // If not found, try resolving as a User id -> find User by id and then Student by email
+    if (!target) {
+      try {
+        const User = require('../models/User');
+        const user = await User.findById(studentId).select('email');
+        if (user && user.email) {
+          target = allStudents.find((s) => String(s.email) === String(user.email));
+        }
+      } catch (e) {
+        // ignore resolution errors
+      }
+    }
+
     if (!target) return res.status(404).json({ message: "Student not found" });
 
     const termSet = new Set();
@@ -103,7 +119,23 @@ router.get("/trends/:studentId", async (req, res) => {
   try {
     const { studentId } = req.params;
     const allStudents = await Student.find({});
-    const target = allStudents.find((s) => String(s._id) === String(studentId));
+
+    // Try direct Student._id match
+    let target = allStudents.find((s) => String(s._id) === String(studentId));
+
+    // If not found, try resolving as a User id -> find User by id and then Student by email
+    if (!target) {
+      try {
+        const User = require('../models/User');
+        const user = await User.findById(studentId).select('email');
+        if (user && user.email) {
+          target = allStudents.find((s) => String(s.email) === String(user.email));
+        }
+      } catch (e) {
+        // ignore resolution errors
+      }
+    }
+
     if (!target) return res.status(404).json({ message: "Student not found" });
 
     const termSet = new Set();
@@ -154,6 +186,21 @@ router.get('/student-progress', auth, async (req, res) => {
       const studentDoc = await Student.findOne({ email: user.email });
       if (!studentDoc) return res.status(404).json({ message: 'Student enrollment record not found' });
       studentId = studentDoc._id;
+    } else {
+      // If a studentId was provided, it may be a User id (from name lookup).
+      // Try to resolve a User id -> Student doc by email when direct Student lookup fails.
+      const directStudent = await Student.findById(studentId);
+      if (!directStudent) {
+        try {
+          const maybeUser = await User.findById(studentId).select('email');
+          if (maybeUser && maybeUser.email) {
+            const studentDoc = await Student.findOne({ email: maybeUser.email });
+            if (studentDoc) studentId = studentDoc._id;
+          }
+        } catch (e) {
+          // ignore and continue; we'll attempt direct lookup below which will fail
+        }
+      }
     }
 
     // populate both enrollments.course and gradeHistory.course so we can compute per-course grades
