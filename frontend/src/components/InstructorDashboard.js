@@ -16,7 +16,11 @@ export default function InstructorDashboard(){
         const res = await api.get('/enrollments/courses/my-requests');
         if(!mounted) return;
         setRequests(res.data || []);
-      }catch(e){ console.error(e); setError(e.response?.data?.message || 'Failed to load'); }
+      }catch(e){ 
+        console.error('Error loading requests:', e);
+        setError(e.response?.data?.message || 'Failed to load');
+        setRequests([]); // Set empty array on error
+      }
       setLoading(false);
     };
     load();
