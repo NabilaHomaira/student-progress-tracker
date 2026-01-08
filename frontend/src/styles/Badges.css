@@ -1,0 +1,8 @@
+.badges-container { padding: 12px; border: 1px solid #eef6f1; border-radius: 8px; background: #fff; }
+.badges-container h3 { margin-top: 0; }
+.badges-list { display:flex; flex-wrap:wrap; gap:10px; }
+.badge-card { display:flex; gap:10px; padding:10px; border:1px solid #f3f7f4; border-radius:8px; align-items:center; min-width:220px; }
+.badge-icon { font-size:28px; }
+.badge-name { font-weight:700; }
+.badge-desc { color:#6b7280; font-size:0.9rem; }
+.badges-container .error { color:crimson; }
